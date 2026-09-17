@@ -4141,10 +4141,10 @@ index 025ec3f3e84a3367b4d709c8c3ecd98f6dfecab4..78fd32976b9394d5a6ddeb0444eae3f5
  
      public static int playerSample;
 diff --git a/src/main/java/org/spigotmc/SpigotWorldConfig.java b/src/main/java/org/spigotmc/SpigotWorldConfig.java
-index 37416aa61a92c558346056510496379bae22fc5b..88f418c957ebd227029b57582715e901f8040daa 100644
+index 7ccb1f3f4a91aeb1295594a4645a74a9e9e697dc..6056f98f5b28ff2d4a7c49c79edb15c1d3ddac80 100644
 --- a/src/main/java/org/spigotmc/SpigotWorldConfig.java
 +++ b/src/main/java/org/spigotmc/SpigotWorldConfig.java
-@@ -427,7 +427,7 @@ public class SpigotWorldConfig {
+@@ -432,7 +432,7 @@ public class SpigotWorldConfig {
          this.otherMultiplier = (float) this.getDouble("hunger.other-multiplier", 0.0);
      }
  
