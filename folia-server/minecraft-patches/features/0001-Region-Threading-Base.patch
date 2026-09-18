@@ -13245,7 +13245,7 @@ index f20883bb9eb53822e507682fa78008265d5787f5..5da7c15cefbbbf2df7abf38d92aa98c0
      private void trySchedule() {
          if (this.hasBudget) {
 -            this.player.level().getServer().execute(this::tryProcessRequest);
-+            player.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer _) -> this.trySchedule()); // Folia - region threading
++            player.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer _) -> this.tryProcessRequest()); // Folia - region threading
          }
      }
  
