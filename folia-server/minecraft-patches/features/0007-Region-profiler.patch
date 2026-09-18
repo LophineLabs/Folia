@@ -958,7 +958,7 @@ index 56c46f41028c5951a465beadcde469b6ff6c69d7..9b14d30458679c8f88fc99e6dd8f2f6a
          //this.playerList.tick(); // Folia - region threading
          profiler.popPush("debugSubscribers");
 diff --git a/net/minecraft/server/level/ChunkMap.java b/net/minecraft/server/level/ChunkMap.java
-index cc08261821314399f6400c53f7daf465790fedeb..5e634409f2497e12579f2e07d2bb5311c155de69 100644
+index 6488e1da573a27bc4b7052748ac7bd40eaac9d39..ee2ed8dab9abbd137b728904038e7db3fc809de8 100644
 --- a/net/minecraft/server/level/ChunkMap.java
 +++ b/net/minecraft/server/level/ChunkMap.java
 @@ -399,12 +399,17 @@ public class ChunkMap extends SimpleRegionStorage implements ChunkHolder.PlayerP

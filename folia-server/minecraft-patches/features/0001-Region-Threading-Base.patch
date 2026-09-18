@@ -10625,7 +10625,7 @@ index 68675926ee85f738b3693a76fc29b80b80c717ed..762822ce2ccf98952dc92be4824c48fe
          super.stopServer();
          //Util.shutdownExecutors(); // Paper - Improved watchdog support; moved into super
 diff --git a/net/minecraft/server/level/ChunkMap.java b/net/minecraft/server/level/ChunkMap.java
-index b4d62fac8af59f98463f55f2b864343baeefc79d..cc08261821314399f6400c53f7daf465790fedeb 100644
+index 3ed912fb19e1dfda7987fcf4b504aff5abccc46c..6488e1da573a27bc4b7052748ac7bd40eaac9d39 100644
 --- a/net/minecraft/server/level/ChunkMap.java
 +++ b/net/minecraft/server/level/ChunkMap.java
 @@ -137,8 +137,8 @@ public class ChunkMap extends SimpleRegionStorage implements ChunkHolder.PlayerP
@@ -13237,7 +13237,7 @@ index 6f95e6d12183eee59272927bb21def3729d8789c..d1c9ddc72c5caca3fbd87a815dd28726
      }
  
 diff --git a/net/minecraft/server/network/ServerCommandSuggestionsProvider.java b/net/minecraft/server/network/ServerCommandSuggestionsProvider.java
-index f20883bb9eb53822e507682fa78008265d5787f5..5da7c15cefbbbf2df7abf38d92aa98c07386c3cc 100644
+index f20883bb9eb53822e507682fa78008265d5787f5..6512a26f554a255c42e4cf323f46897e97c14eda 100644
 --- a/net/minecraft/server/network/ServerCommandSuggestionsProvider.java
 +++ b/net/minecraft/server/network/ServerCommandSuggestionsProvider.java
 @@ -72,7 +72,7 @@ public class ServerCommandSuggestionsProvider {
@@ -16641,10 +16641,10 @@ index 95a2c47dfaef33737afb4843ea5a784d0392046e..0ee702caeedd29c7f4cde07e88608e83
                  BlockPos pos = this.blockPosition();
                  boolean isConcrete = this.blockState.getBlock() instanceof ConcretePowderBlock;
 diff --git a/net/minecraft/world/entity/item/ItemEntity.java b/net/minecraft/world/entity/item/ItemEntity.java
-index ed893f66f5eed97abc4ee3a5da0b5c9d88859ac3..c8088334bc1015de82634bae831ffcc6689d4f3f 100644
+index 8b10b2121b61892eb4f98533c7df1ba549cdc64f..7dd431fb4b09ca6b8f9b98c2336d889a61ea89b8 100644
 --- a/net/minecraft/world/entity/item/ItemEntity.java
 +++ b/net/minecraft/world/entity/item/ItemEntity.java
-@@ -507,9 +507,20 @@ public class ItemEntity extends Entity implements TraceableEntity {
+@@ -499,9 +499,20 @@ public class ItemEntity extends Entity implements TraceableEntity {
          return false;
      }
  
