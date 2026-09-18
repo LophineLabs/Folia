@@ -12963,6 +12963,19 @@ index 6f95e6d12183eee59272927bb21def3729d8789c..d1c9ddc72c5caca3fbd87a815dd28726
          this.environmentAttributes = EnvironmentAttributeSystem.builder().addStaticLayers(this).build();
      }
  
+diff --git a/net/minecraft/server/network/ServerCommandSuggestionsProvider.java b/net/minecraft/server/network/ServerCommandSuggestionsProvider.java
+index f20883bb9eb53822e507682fa78008265d5787f5..5da7c15cefbbbf2df7abf38d92aa98c07386c3cc 100644
+--- a/net/minecraft/server/network/ServerCommandSuggestionsProvider.java
++++ b/net/minecraft/server/network/ServerCommandSuggestionsProvider.java
+@@ -72,7 +72,7 @@ public class ServerCommandSuggestionsProvider {
+ 
+     private void trySchedule() {
+         if (this.hasBudget) {
+-            this.player.level().getServer().execute(this::tryProcessRequest);
++            player.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer _) -> this.trySchedule()); // Folia - region threading
+         }
+     }
+ 
 diff --git a/net/minecraft/server/network/ServerCommonPacketListenerImpl.java b/net/minecraft/server/network/ServerCommonPacketListenerImpl.java
 index 5dbb2849f32ac3418f8fdf76c04022d7e9dc165b..010180899d69d0457dcc9feee4f1c062c5354995 100644
 --- a/net/minecraft/server/network/ServerCommonPacketListenerImpl.java
