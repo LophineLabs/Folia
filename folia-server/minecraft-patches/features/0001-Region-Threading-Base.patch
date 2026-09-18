@@ -8778,23 +8778,48 @@ index c3bf41af0273e902f881cc070fcef6dd64abb063..56c46f41028c5951a465beadcde469b6
      // Paper end - API to check if the server is sleeping
  }
 diff --git a/net/minecraft/server/commands/AdvancementCommands.java b/net/minecraft/server/commands/AdvancementCommands.java
-index d9eb9938c0e8267d2e6aed621558fea91094080c..47a7f960ca17ba81529b2cc04c3c48498b1acd47 100644
+index d9eb9938c0e8267d2e6aed621558fea91094080c..077d5c1b0cbde1978665a96b14efeb4bf74fe057 100644
 --- a/net/minecraft/server/commands/AdvancementCommands.java
 +++ b/net/minecraft/server/commands/AdvancementCommands.java
-@@ -240,7 +240,11 @@ public class AdvancementCommands {
+@@ -239,23 +239,34 @@ public class AdvancementCommands {
+     ) throws CommandSyntaxException {
          CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            tracker.track(player, action.perform(player, advancements, showAdvancements));
-+            // Folia start - region threading
-+            player.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer newPlayer) -> {
-+                tracker.track(newPlayer, action.perform(newPlayer, advancements, showAdvancements));
-+            });
-+            // Folia end - region threading
++            java.util.concurrent.atomic.AtomicReference<net.minecraft.world.entity.Entity> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> action.perform((ServerPlayer) ref.get(), advancements, showAdvancements));
          }
  
++        Runnable task = () -> {
++            try {
          int advancementCount = advancements.size();
-@@ -273,7 +277,11 @@ public class AdvancementCommands {
+         if (advancementCount == 1) {
+             AdvancementHolder advancementName = Iterables.getOnlyElement(advancements);
+             if (tracker.totalValue() == 0) {
+                 throw (CommandSyntaxException)tracker.dispatch(CommandResponseTracker.ElementType.ANY, action.singleAdvancementsError, advancementName);
+             } else {
+-                return tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, action.singleAdvancementSuccessResponse, advancementName);
++                tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, action.singleAdvancementSuccessResponse, advancementName);
+             }
+         } else if (tracker.totalValue() == 0) {
+             throw (CommandSyntaxException)tracker.dispatch(CommandResponseTracker.ElementType.ANY, action.multipleAdvancementsError, advancementCount);
+         } else {
+-            return tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, action.multipleAdvancementsSuccessResponse, advancementCount);
++            tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, action.multipleAdvancementsSuccessResponse, advancementCount);
+         }
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private static int performCriterion(
+@@ -273,7 +284,11 @@ public class AdvancementCommands {
          CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
  
          for (ServerPlayer player : players) {
@@ -9019,6 +9044,65 @@ index ed715c7fcbae3a608e3347d123a4f4501aa30de4..a5efe62395487791094c88450deb8bdf
          }
  
          if (tracker.totalValue() == 0) {
+diff --git a/net/minecraft/server/commands/CommandResponseTracker.java b/net/minecraft/server/commands/CommandResponseTracker.java
+index 8f4e8778c44f86bbf4d4809d4d920fc2c0ad0f8c..f0a6034550006af71418ef24fc434fe4855c6ee6 100644
+--- a/net/minecraft/server/commands/CommandResponseTracker.java
++++ b/net/minecraft/server/commands/CommandResponseTracker.java
+@@ -42,6 +42,54 @@ public class CommandResponseTracker<Element> {
+         this.track(element, 1);
+     }
+ 
++    // Folia start - region threading
++    private final java.util.concurrent.atomic.AtomicReference<Runnable> onComplete = new java.util.concurrent.atomic.AtomicReference<>(null);
++    private final java.util.concurrent.atomic.AtomicInteger totalCount = new java.util.concurrent.atomic.AtomicInteger();
++    private final java.util.concurrent.atomic.AtomicInteger totalCalled = new java.util.concurrent.atomic.AtomicInteger();
++    public void track(final java.util.concurrent.atomic.AtomicReference<net.minecraft.world.entity.Entity> entity, final Runnable runnable) {
++        totalCount.incrementAndGet();
++        entity.get().getBukkitEntity().taskScheduler.scheduleOrExecute((target) -> {
++            entity.set(target);
++            runnable.run();
++            totalCalled.incrementAndGet();
++            onComplete();
++        });
++    }
++
++    public void track(final net.minecraft.server.level.ServerLevel level, final net.minecraft.world.level.ChunkPos pos, final Runnable runnable) {
++        totalCount.incrementAndGet();
++        io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
++                level,
++                pos.x(),
++                pos.z(),
++                () -> {
++                    runnable.run();
++                    totalCalled.incrementAndGet();
++                    onComplete();
++                }
++        );
++    }
++
++    public void track(final net.minecraft.server.level.ServerLevel level, final net.minecraft.core.BlockPos pos, final Runnable runnable) {
++        track(level, new net.minecraft.world.level.ChunkPos(pos.getX() >> 4, pos.getZ() >> 4), runnable);
++    }
++
++    public void onComplete(final Runnable runnable) {
++        synchronized (onComplete) {
++            onComplete.set(runnable);
++            onComplete();
++        }
++    }
++
++    private void onComplete() {
++        synchronized (onComplete) {
++            if (onComplete.get() != null && totalCalled.get() == totalCount.get()) {
++                onComplete.get().run();
++            }
++        }
++    }
++    // Folia end - region threading
++
+     private @Nullable Element firstElement(final CommandResponseTracker.ElementType type) {
+         return (Element)(switch (type) {
+             case ANY -> this.onlyElement;
 diff --git a/net/minecraft/server/commands/DamageCommand.java b/net/minecraft/server/commands/DamageCommand.java
 index bec064ee3fa076961e8266e4c879da1c24f857a5..6f837759d77f2461898be62974b72dd5bb4c79d9 100644
 --- a/net/minecraft/server/commands/DamageCommand.java
