@@ -9045,10 +9045,10 @@ index ed715c7fcbae3a608e3347d123a4f4501aa30de4..a5efe62395487791094c88450deb8bdf
  
          if (tracker.totalValue() == 0) {
 diff --git a/net/minecraft/server/commands/CommandResponseTracker.java b/net/minecraft/server/commands/CommandResponseTracker.java
-index 8f4e8778c44f86bbf4d4809d4d920fc2c0ad0f8c..f0a6034550006af71418ef24fc434fe4855c6ee6 100644
+index 8f4e8778c44f86bbf4d4809d4d920fc2c0ad0f8c..b5d2c890bc42e17a669d77e97cf7fc64ddb75ac9 100644
 --- a/net/minecraft/server/commands/CommandResponseTracker.java
 +++ b/net/minecraft/server/commands/CommandResponseTracker.java
-@@ -42,6 +42,54 @@ public class CommandResponseTracker<Element> {
+@@ -42,6 +42,83 @@ public class CommandResponseTracker<Element> {
          this.track(element, 1);
      }
  
@@ -9056,32 +9056,61 @@ index 8f4e8778c44f86bbf4d4809d4d920fc2c0ad0f8c..f0a6034550006af71418ef24fc434fe4
 +    private final java.util.concurrent.atomic.AtomicReference<Runnable> onComplete = new java.util.concurrent.atomic.AtomicReference<>(null);
 +    private final java.util.concurrent.atomic.AtomicInteger totalCount = new java.util.concurrent.atomic.AtomicInteger();
 +    private final java.util.concurrent.atomic.AtomicInteger totalCalled = new java.util.concurrent.atomic.AtomicInteger();
-+    public void track(final java.util.concurrent.atomic.AtomicReference<net.minecraft.world.entity.Entity> entity, final Runnable runnable) {
-+        totalCount.incrementAndGet();
-+        entity.get().getBukkitEntity().taskScheduler.scheduleOrExecute((target) -> {
-+            entity.set(target);
-+            runnable.run();
-+            totalCalled.incrementAndGet();
-+            onComplete();
-+        });
++    public void track(final java.util.concurrent.atomic.AtomicReference<Element> entity, final java.util.function.IntSupplier runnable) {
++        if (entity.get() instanceof net.minecraft.world.entity.Entity newEntity) {
++            totalCount.incrementAndGet();
++            newEntity.getBukkitEntity().taskScheduler.scheduleOrExecute((target) -> {
++                entity.set((Element) target);
++                track((Element) target, runnable.getAsInt());
++                totalCalled.incrementAndGet();
++                onComplete();
++            });
++        } else {
++            throw new UnsupportedOperationException();
++        }
++    }
++    public void track(final java.util.concurrent.atomic.AtomicReference<Element> entity, final java.util.function.BooleanSupplier runnable) {
++        java.util.function.IntSupplier newTask = () -> {
++            boolean ret = runnable.getAsBoolean();
++            return ret ? 1 : 0;
++        };
++        track(entity, newTask);
 +    }
 +
-+    public void track(final net.minecraft.server.level.ServerLevel level, final net.minecraft.world.level.ChunkPos pos, final Runnable runnable) {
-+        totalCount.incrementAndGet();
-+        io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
-+                level,
-+                pos.x(),
-+                pos.z(),
-+                () -> {
-+                    runnable.run();
-+                    totalCalled.incrementAndGet();
-+                    onComplete();
-+                }
-+        );
++    public void track(final net.minecraft.server.level.ServerLevel level, final Element pos, final java.util.function.IntSupplier runnable) {
++        if (pos instanceof net.minecraft.core.BlockPos blockPos) {
++            totalCount.incrementAndGet();
++            io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
++                    level,
++                    blockPos.getX() >> 4,
++                    blockPos.getZ() >> 4,
++                    () -> {
++                        track(pos, runnable.getAsInt());
++                        onComplete();
++                    }
++            );
++        } else if (pos instanceof net.minecraft.world.level.ChunkPos chunkPos) {
++            totalCount.incrementAndGet();
++            io.papermc.paper.threadedregions.RegionizedServer.getInstance().taskQueue.queueTickTaskQueue(
++                    level,
++                    chunkPos.x(),
++                    chunkPos.z(),
++                    () -> {
++                        track(pos, runnable.getAsInt());
++                        onComplete();
++                    }
++            );
++        } else {
++            throw new UnsupportedOperationException();
++        }
 +    }
 +
-+    public void track(final net.minecraft.server.level.ServerLevel level, final net.minecraft.core.BlockPos pos, final Runnable runnable) {
-+        track(level, new net.minecraft.world.level.ChunkPos(pos.getX() >> 4, pos.getZ() >> 4), runnable);
++    public void track(final net.minecraft.server.level.ServerLevel level, final Element pos, final java.util.function.BooleanSupplier runnable) {
++        java.util.function.IntSupplier newTask = () -> {
++            boolean ret = runnable.getAsBoolean();
++            return ret ? 1 : 0;
++        };
++        track(level, pos, newTask);
 +    }
 +
 +    public void onComplete(final Runnable runnable) {
