@@ -7325,7 +7325,7 @@ index 7cbcc8865893ea4f7fae8da13f534c65fcdcd216..fa52d458d402ae9121eaa8b876d8d6b4
      }
  
 diff --git a/net/minecraft/commands/Commands.java b/net/minecraft/commands/Commands.java
-index fb816ac65e382eac207afd56185a73c440c6245a..3bab87d0f5a6fb6e24ab9d5f9cd7aa458f15fae1 100644
+index fb816ac65e382eac207afd56185a73c440c6245a..a37006d09aebf2c7bd4978f0c204a81973116c4f 100644
 --- a/net/minecraft/commands/Commands.java
 +++ b/net/minecraft/commands/Commands.java
 @@ -200,16 +200,16 @@ public class Commands {
@@ -7351,7 +7351,7 @@ index fb816ac65e382eac207afd56185a73c440c6245a..3bab87d0f5a6fb6e24ab9d5f9cd7aa45
          DifficultyCommand.register(this.dispatcher);
          EffectCommands.register(this.dispatcher, context);
          EmoteCommands.register(this.dispatcher);
-@@ -218,17 +218,17 @@ public class Commands {
+@@ -218,54 +218,54 @@ public class Commands {
          FillCommand.register(this.dispatcher, context);
          FillBiomeCommand.register(this.dispatcher, context);
          ForceLoadCommand.register(this.dispatcher);
@@ -7372,9 +7372,10 @@ index fb816ac65e382eac207afd56185a73c440c6245a..3bab87d0f5a6fb6e24ab9d5f9cd7aa45
          MsgCommand.register(this.dispatcher);
          SwingCommand.register(this.dispatcher);
          ParticleCommand.register(this.dispatcher, context);
-@@ -236,36 +236,36 @@ public class Commands {
+         PlaceCommand.register(this.dispatcher, context);
          PlaySoundCommand.register(this.dispatcher);
-         PostEffectCommand.register(this.dispatcher);
+-        PostEffectCommand.register(this.dispatcher);
++        //PostEffectCommand.register(this.dispatcher); // Folia - region threading - TODO later
          RandomCommand.register(this.dispatcher);
 -        ReloadCommand.register(this.dispatcher);
 +        //ReloadCommand.register(this.dispatcher); // Folia - region threading
@@ -8778,7 +8779,7 @@ index c3bf41af0273e902f881cc070fcef6dd64abb063..56c46f41028c5951a465beadcde469b6
      // Paper end - API to check if the server is sleeping
  }
 diff --git a/net/minecraft/server/commands/AdvancementCommands.java b/net/minecraft/server/commands/AdvancementCommands.java
-index d9eb9938c0e8267d2e6aed621558fea91094080c..077d5c1b0cbde1978665a96b14efeb4bf74fe057 100644
+index d9eb9938c0e8267d2e6aed621558fea91094080c..ec71e26f0a19188690b15e6bbdb989572a4630c8 100644
 --- a/net/minecraft/server/commands/AdvancementCommands.java
 +++ b/net/minecraft/server/commands/AdvancementCommands.java
 @@ -239,23 +239,34 @@ public class AdvancementCommands {
@@ -8788,12 +8789,12 @@ index d9eb9938c0e8267d2e6aed621558fea91094080c..077d5c1b0cbde1978665a96b14efeb4b
 +        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            tracker.track(player, action.perform(player, advancements, showAdvancements));
-+            java.util.concurrent.atomic.AtomicReference<net.minecraft.world.entity.Entity> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
-+            tracker.track(ref, () -> action.perform((ServerPlayer) ref.get(), advancements, showAdvancements));
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> action.perform(ref.get(), advancements, showAdvancements));
          }
  
 +        Runnable task = () -> {
-+            try {
++        try {
          int advancementCount = advancements.size();
          if (advancementCount == 1) {
              AdvancementHolder advancementName = Iterables.getOnlyElement(advancements);
@@ -8819,19 +8820,36 @@ index d9eb9938c0e8267d2e6aed621558fea91094080c..077d5c1b0cbde1978665a96b14efeb4b
      }
  
      private static int performCriterion(
-@@ -273,7 +284,11 @@ public class AdvancementCommands {
+@@ -272,15 +283,26 @@ public class AdvancementCommands {
+ 
          CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            tracker.track(player, action.performCriterion(player, holder, criterion));
-+            // Folia start - region threading
-+            player.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer newPlayer) -> {
-+                tracker.track(newPlayer, action.performCriterion(newPlayer, holder, criterion));
-+            });
-+            // Folia end - region threading
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> action.performCriterion(ref.get(), holder, criterion));
          }
  
++        Runnable task = () -> {
++        try {
          if (tracker.totalValue() == 0) {
+-            throw (CommandSyntaxException)tracker.dispatch(CommandResponseTracker.ElementType.ANY, action.criterionError, holder, criterion);
++            throw (CommandSyntaxException) tracker.dispatch(CommandResponseTracker.ElementType.ANY, action.criterionError, holder, criterion);
+         } else {
+-            return tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, action.criterionSuccessResponse, holder, criterion);
++            tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, action.criterionSuccessResponse, holder, criterion);
+         }
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private static List<AdvancementHolder> getAdvancements(
 diff --git a/net/minecraft/server/commands/AttributeCommand.java b/net/minecraft/server/commands/AttributeCommand.java
 index c7d9d16ea5625070b99c756f63c05fc5a059cb7a..b3ec5179059abb6c1d8da473a619ff322d21e941 100644
 --- a/net/minecraft/server/commands/AttributeCommand.java
@@ -9025,25 +9043,50 @@ index c7d9d16ea5625070b99c756f63c05fc5a059cb7a..b3ec5179059abb6c1d8da473a619ff32
  
      private static Component getAttributeDescription(final Holder<Attribute> attribute) {
 diff --git a/net/minecraft/server/commands/ClearInventoryCommands.java b/net/minecraft/server/commands/ClearInventoryCommands.java
-index ed715c7fcbae3a608e3347d123a4f4501aa30de4..a5efe62395487791094c88450deb8bdf57f95f8c 100644
+index ed715c7fcbae3a608e3347d123a4f4501aa30de4..fc17b2d32cfef73fc578b71e50c83bee9e477b7c 100644
 --- a/net/minecraft/server/commands/ClearInventoryCommands.java
 +++ b/net/minecraft/server/commands/ClearInventoryCommands.java
-@@ -77,11 +77,15 @@ public class ClearInventoryCommands {
+@@ -76,18 +76,33 @@ public class ClearInventoryCommands {
+         CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
          boolean countingOnly = maxCount == 0;
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
-+            // Folia start - region threading
-+            player.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer newPlayer) -> {
-             tracker.track(player, player.getInventory().clearOrCountMatchingItems(predicate, countingOnly, maxCount, player.inventoryMenu.getCraftSlots()));
-             if (!countingOnly) {
-                 player.containerMenu.broadcastChanges();
-                 player.inventoryMenu.slotsChanged(player.getInventory());
-             }
-+            });
-+            // Folia end - region threading
+-            tracker.track(player, player.getInventory().clearOrCountMatchingItems(predicate, countingOnly, maxCount, player.inventoryMenu.getCraftSlots()));
+-            if (!countingOnly) {
+-                player.containerMenu.broadcastChanges();
+-                player.inventoryMenu.slotsChanged(player.getInventory());
+-            }
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            java.util.function.IntSupplier task = () -> {
++                int ret = player.getInventory().clearOrCountMatchingItems(predicate, countingOnly, maxCount, player.inventoryMenu.getCraftSlots());
++                if (!countingOnly) {
++                    player.containerMenu.broadcastChanges();
++                    player.inventoryMenu.slotsChanged(player.getInventory());
++                }
++                return ret;
++            };
++            tracker.track(ref, task);
          }
  
++        Runnable task = () -> {
++            try {
          if (tracker.totalValue() == 0) {
+-            throw (CommandSyntaxException)tracker.dispatch(CommandResponseTracker.ElementType.ANY, ERROR_DISPATCH);
++            throw (CommandSyntaxException) tracker.dispatch(CommandResponseTracker.ElementType.ANY, ERROR_DISPATCH);
+         } else {
+-            return tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, maxCount == 0 ? RESPONSE_TEST : RESPONSE_CLEAR);
++            tracker.sendFeedback(source, true, CommandResponseTracker.ElementType.NON_ZERO, maxCount == 0 ? RESPONSE_TEST : RESPONSE_CLEAR);
+         }
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ }
 diff --git a/net/minecraft/server/commands/CommandResponseTracker.java b/net/minecraft/server/commands/CommandResponseTracker.java
 index 8f4e8778c44f86bbf4d4809d4d920fc2c0ad0f8c..b5d2c890bc42e17a669d77e97cf7fc64ddb75ac9 100644
 --- a/net/minecraft/server/commands/CommandResponseTracker.java
@@ -9170,48 +9213,89 @@ index bec064ee3fa076961e8266e4c879da1c24f857a5..6f837759d77f2461898be62974b72dd5
      }
  }
 diff --git a/net/minecraft/server/commands/EffectCommands.java b/net/minecraft/server/commands/EffectCommands.java
-index 24f8170affce62cb06824663012511a557efd7ec..424cb86ecf99e64a98c583918b380279ce0c2f28 100644
+index 24f8170affce62cb06824663012511a557efd7ec..d50451820b0c66f081156095a7f7dd334539faee 100644
 --- a/net/minecraft/server/commands/EffectCommands.java
 +++ b/net/minecraft/server/commands/EffectCommands.java
-@@ -184,7 +184,11 @@ public class EffectCommands {
+@@ -181,14 +181,25 @@ public class EffectCommands {
+         int duration = computeDurationInTicks(seconds, effect);
+         CommandResponseTracker<LivingEntity> tracker = CommandResponseTracker.create();
+ 
++        // Folia start - region threading
          for (Entity entity : entities) {
              if (entity instanceof LivingEntity livingEntity) {
                  MobEffectInstance instance = new MobEffectInstance(effectHolder, duration, amplifier, false, particles);
 -                tracker.track(livingEntity, livingEntity.addEffect(instance, source.getEntity(), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
-+                // Folia start - region threading
-+                entity.getBukkitEntity().taskScheduler.scheduleOrExecute((LivingEntity newEntity) -> {
-+                    tracker.track(newEntity, newEntity.addEffect(instance, source.getEntity(), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
-+                });
-+                // Folia end - region threading
++                java.util.concurrent.atomic.AtomicReference<LivingEntity> ref = new java.util.concurrent.atomic.AtomicReference<>(livingEntity);
++                tracker.track(ref, () -> ref.get().addEffect(instance, source.getEntity(), org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
              }
          }
  
-@@ -208,7 +212,11 @@ public class EffectCommands {
+-        return tracker.sendFeedback(source, true, RESPONSE_GIVE, effect, duration);
++        Runnable task = () -> {
++        try {
++            tracker.sendFeedback(source, true, RESPONSE_GIVE, effect, duration);
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
  
+     private static int computeDurationInTicks(final @Nullable Integer seconds, final MobEffect effect) {
+@@ -206,25 +217,47 @@ public class EffectCommands {
+     private static int clearEffects(final CommandSourceStack source, final Collection<? extends Entity> entities) throws CommandSyntaxException {
+         CommandResponseTracker<LivingEntity> tracker = CommandResponseTracker.create();
+ 
++        // Folia start - region threading
          for (Entity entity : entities) {
              if (entity instanceof LivingEntity livingEntity) {
 -                tracker.track(livingEntity, livingEntity.removeAllEffects(org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
-+                // Folia start - region threading
-+                entity.getBukkitEntity().taskScheduler.scheduleOrExecute((LivingEntity newEntity) -> {
-+                    tracker.track(newEntity, newEntity.removeAllEffects(org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
-+                });
-+                // Folia end - region threading
++                java.util.concurrent.atomic.AtomicReference<LivingEntity> ref = new java.util.concurrent.atomic.AtomicReference<>(livingEntity);
++                tracker.track(ref, () -> ref.get().removeAllEffects(org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
              }
          }
  
-@@ -221,7 +229,11 @@ public class EffectCommands {
+-        return tracker.sendFeedback(source, true, RESPONSE_CLEAR_ALL);
++        Runnable task = () -> {
++            try {
++                tracker.sendFeedback(source, true, RESPONSE_CLEAR_ALL);
++            } catch (CommandSyntaxException e) {
++                source.sendFailure((Component)e.getRawMessage());
++            }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
  
+     private static int clearEffect(final CommandSourceStack source, final Collection<? extends Entity> entities, final Holder<MobEffect> effectHolder) throws CommandSyntaxException {
+         MobEffect effect = effectHolder.value();
+         CommandResponseTracker<LivingEntity> tracker = CommandResponseTracker.create();
+ 
++        // Folia start - region threading
          for (Entity entity : entities) {
              if (entity instanceof LivingEntity livingEntity) {
 -                tracker.track(livingEntity, livingEntity.removeEffect(effectHolder, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
-+                // Folia start - region threading
-+                entity.getBukkitEntity().taskScheduler.scheduleOrExecute((LivingEntity newEntity) -> {
-+                    tracker.track(newEntity, newEntity.removeEffect(effectHolder, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
-+                });
-+                // Folia end - region threading
++                java.util.concurrent.atomic.AtomicReference<LivingEntity> ref = new java.util.concurrent.atomic.AtomicReference<>(livingEntity);
++                tracker.track(ref, () -> ref.get().removeEffect(effectHolder, org.bukkit.event.entity.EntityPotionEffectEvent.Cause.COMMAND)); // CraftBukkit
              }
          }
  
+-        return tracker.sendFeedback(source, true, RESPONSE_CLEAR_SINGLE, effect);
++        Runnable task = () -> {
++            try {
++                tracker.sendFeedback(source, true, RESPONSE_CLEAR_SINGLE, effect);
++            } catch (CommandSyntaxException e) {
++                source.sendFailure((Component)e.getRawMessage());
++            }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ }
 diff --git a/net/minecraft/server/commands/EnchantCommand.java b/net/minecraft/server/commands/EnchantCommand.java
 index 8c1721318a8e21f92e53ac900b823a3a99e28fef..f5d3bb2b8f73de6b5cf9b274c12414be63de7c26 100644
 --- a/net/minecraft/server/commands/EnchantCommand.java
@@ -9312,7 +9396,7 @@ index 8c1721318a8e21f92e53ac900b823a3a99e28fef..f5d3bb2b8f73de6b5cf9b274c12414be
 +    // Folia end - region threading
  }
 diff --git a/net/minecraft/server/commands/ExperienceCommand.java b/net/minecraft/server/commands/ExperienceCommand.java
-index c94f96440b9ccd3754c0e88a012237dfdff8aef5..e7866bfcd53c3fda9e816462078358322ff4ab05 100644
+index c94f96440b9ccd3754c0e88a012237dfdff8aef5..260a79cf82a807fcb8ff6b9845f64345aeff3c88 100644
 --- a/net/minecraft/server/commands/ExperienceCommand.java
 +++ b/net/minecraft/server/commands/ExperienceCommand.java
 @@ -123,9 +123,13 @@ public class ExperienceCommand {
@@ -9332,30 +9416,59 @@ index c94f96440b9ccd3754c0e88a012237dfdff8aef5..e7866bfcd53c3fda9e81646207835832
      }
  
      private static int addExperience(
-@@ -134,7 +138,9 @@ public class ExperienceCommand {
+@@ -133,12 +137,24 @@ public class ExperienceCommand {
+     ) throws CommandSyntaxException {
          CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            type.add.accept(player, amount);
-+            player.getBukkitEntity().taskScheduler.schedule((ServerPlayer newPlayer) -> { // Folia - region threading
-+            type.add.accept(newPlayer, amount); // Folia - region threading
-+            }, null, 1L); // Folia - region threading
-             tracker.track(player);
+-            tracker.track(player);
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> {
++                type.add.accept(ref.get(), amount);
++                return true;
++            });
          }
  
-@@ -147,7 +153,11 @@ public class ExperienceCommand {
+-        return tracker.sendFeedback(source, true, type.addResponse, amount);
++        Runnable task = () -> {
++        try {
++        tracker.sendFeedback(source, true, type.addResponse, amount);
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
+     }
+ 
+     private static int setExperience(
+@@ -146,11 +162,22 @@ public class ExperienceCommand {
+     ) throws CommandSyntaxException {
          CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            tracker.track(player, type.set.test(player, amount));
-+            // Folia start - region threading
-+            player.getBukkitEntity().taskScheduler.schedule((ServerPlayer newPlayer) -> {
-+                tracker.track(newPlayer, type.set.test(newPlayer, amount));
-+            }, null, 1L);
-+            // Folia end - region threading
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> type.set.test(ref.get(), amount));
          }
  
-         return tracker.sendFeedback(source, true, type.setResponse, amount);
+-        return tracker.sendFeedback(source, true, type.setResponse, amount);
++        Runnable task = () -> {
++        try {
++        tracker.sendFeedback(source, true, type.setResponse, amount);
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private enum Type {
 diff --git a/net/minecraft/server/commands/FetchProfileCommand.java b/net/minecraft/server/commands/FetchProfileCommand.java
 index 2963f5b9125e9592fe6daa87b87e1280f27d1147..3d4ca86fc6c8ca9f5c3383147616bc5c31ae60ab 100644
 --- a/net/minecraft/server/commands/FetchProfileCommand.java
@@ -9794,35 +9907,56 @@ index 7a65ea8e61928bb607391ab224b70c8b5e260112..ca87479b6cef213dc3e4ea4e8d2cd3e4
  
      private static void checkLoaded(final ServerLevel level, final ChunkPos chunkMin, final ChunkPos chunkMax) throws CommandSyntaxException {
 diff --git a/net/minecraft/server/commands/RecipeCommand.java b/net/minecraft/server/commands/RecipeCommand.java
-index 4b542121c5c774ddb20a0709e29b99dbc6d84dad..2b66ccb7a414992458c3c0a93af926b32280ed64 100644
+index 4b542121c5c774ddb20a0709e29b99dbc6d84dad..245dcbd8e71af0a399a257066af8236fae16d3d5 100644
 --- a/net/minecraft/server/commands/RecipeCommand.java
 +++ b/net/minecraft/server/commands/RecipeCommand.java
-@@ -94,7 +94,11 @@ public class RecipeCommand {
+@@ -93,20 +93,42 @@ public class RecipeCommand {
+     private static int giveRecipes(final CommandSourceStack source, final Collection<ServerPlayer> players, final Collection<RecipeHolder<?>> recipes) throws CommandSyntaxException {
          CommandResponseTracker<ServerPlayer> response = CommandResponseTracker.create();
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            response.track(player, player.awardRecipes(recipes));
-+            // Folia start - region threading
-+            player.getBukkitEntity().taskScheduler.schedule((ServerPlayer newPlayer) -> {
-+                response.track(newPlayer, newPlayer.awardRecipes(recipes));
-+            }, null, 1L);
-+            // Folia end - region threading
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            response.track(ref, () -> ref.get().awardRecipes(recipes));
          }
  
-         return response.sendFeedback(source, true, RESPONSE_GIVE);
-@@ -104,7 +108,11 @@ public class RecipeCommand {
+-        return response.sendFeedback(source, true, RESPONSE_GIVE);
++        Runnable task = () -> {
++        try {
++        response.sendFeedback(source, true, RESPONSE_GIVE);
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        response.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private static int takeRecipes(final CommandSourceStack source, final Collection<ServerPlayer> players, final Collection<RecipeHolder<?>> recipes) throws CommandSyntaxException {
          CommandResponseTracker<ServerPlayer> response = CommandResponseTracker.create();
  
++        // Folia start - region threading
          for (ServerPlayer player : players) {
 -            response.track(player, player.resetRecipes(recipes));
-+            // Folia start - region threading
-+            player.getBukkitEntity().taskScheduler.schedule((ServerPlayer newPlayer) -> {
-+                response.track(newPlayer, newPlayer.resetRecipes(recipes));
-+            }, null, 1L);
-+            // Folia end - region threading
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            response.track(ref, () -> ref.get().resetRecipes(recipes));
          }
  
-         return response.sendFeedback(source, true, RESPONSE_TAKE);
+-        return response.sendFeedback(source, true, RESPONSE_TAKE);
++        Runnable task = () -> {
++        try {
++        response.sendFeedback(source, true, RESPONSE_TAKE);
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        response.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ }
 diff --git a/net/minecraft/server/commands/RideCommand.java b/net/minecraft/server/commands/RideCommand.java
 index cce58467d18985b149195629e421969ca6de3d54..2f6c0784126e1ab22ca7e138452325ebc425001c 100644
 --- a/net/minecraft/server/commands/RideCommand.java
@@ -9965,26 +10099,37 @@ index 785112128803792e1ce821d3da37d6bac6cd3f44..b7ee694217a252ab4b50c46e926c0044
  
      public enum Mode {
 diff --git a/net/minecraft/server/commands/SetSpawnCommand.java b/net/minecraft/server/commands/SetSpawnCommand.java
-index 5eef1cfcb56212624a3a9b2d9e9a5ab2d1cf15ab..9e892b66d4bec6c95d5a8e79ac06f06150fe4d84 100644
+index 5eef1cfcb56212624a3a9b2d9e9a5ab2d1cf15ab..9a7155cc11b3f1f94c6c1044cd590bf5fa36b9a0 100644
 --- a/net/minecraft/server/commands/SetSpawnCommand.java
 +++ b/net/minecraft/server/commands/SetSpawnCommand.java
-@@ -103,9 +103,13 @@ public class SetSpawnCommand {
+@@ -101,14 +101,22 @@ public class SetSpawnCommand {
+         LevelData.RespawnData respawnData = LevelData.RespawnData.of(dimension, pos, yaw, pitch);
+         ServerPlayer.RespawnConfig respawnConfig = new ServerPlayer.RespawnConfig(respawnData, true);
  
++        // Folia start - region threading
          for (ServerPlayer target : targets) {
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(target);
              // Paper start - Add PlayerSetSpawnEvent
 -            if (target.setRespawnPosition(respawnConfig, false, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.COMMAND)) {
 -                tracker.track(target);
 -            }
-+            // Folia start - region threading
-+            target.getBukkitEntity().taskScheduler.scheduleOrExecute((ServerPlayer newTarget) -> {
-+                if (newTarget.setRespawnPosition(respawnConfig, false, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.COMMAND)) {
-+                    tracker.track(newTarget);
-+                }
-+            });
-+            // Folia end - region threading
++            tracker.track(ref, () -> ref.get().setRespawnPosition(respawnConfig, false, com.destroystokyo.paper.event.player.PlayerSetSpawnEvent.Cause.COMMAND));
              // Paper end - Add PlayerSetSpawnEvent
          }
- 
+-
+-        return tracker.sendFeedback(source, true, RESPONSE_SET, respawnData);
++        Runnable task = () -> {
++        try {
++        tracker.sendFeedback(source, true, RESPONSE_SET, respawnData);
++        } catch (CommandSyntaxException e) {
++            source.sendFailure((Component)e.getRawMessage());
++        }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ }
 diff --git a/net/minecraft/server/commands/SummonCommand.java b/net/minecraft/server/commands/SummonCommand.java
 index c318f1f0a57d315786a02265d45605a69c675151..0ee600db2ca117d6ac3f2f1cc0dc9b885e46de6e 100644
 --- a/net/minecraft/server/commands/SummonCommand.java
@@ -10008,6 +10153,21 @@ index c318f1f0a57d315786a02265d45605a69c675151..0ee600db2ca117d6ac3f2f1cc0dc9b88
              throw ERROR_DUPLICATE_UUID.create();
          } else {
              return entity;
+diff --git a/net/minecraft/server/commands/SwingCommand.java b/net/minecraft/server/commands/SwingCommand.java
+index 33b93d753e1dc1854be6825b4d686cc5a000bc63..60966cd8f0bee3611bf2e188adbaae01776b955e 100644
+--- a/net/minecraft/server/commands/SwingCommand.java
++++ b/net/minecraft/server/commands/SwingCommand.java
+@@ -88,7 +88,9 @@ public class SwingCommand {
+ 
+         for (Entity entity : targets) {
+             if (entity instanceof LivingEntity livingEntity) {
+-                livingEntity.swing(hand, animation, true);
++                entity.getBukkitEntity().taskScheduler.scheduleOrExecute((target) ->
++                ((LivingEntity) target).swing(hand, animation, true)
++                );
+                 tracker.track(livingEntity);
+             }
+         }
 diff --git a/net/minecraft/server/commands/TeleportCommand.java b/net/minecraft/server/commands/TeleportCommand.java
 index 97acb0c6ff95a04405eeebc9835ddb84f818128d..a3257b552c7e76269a00cc7416f630e41cf2b3c5 100644
 --- a/net/minecraft/server/commands/TeleportCommand.java
