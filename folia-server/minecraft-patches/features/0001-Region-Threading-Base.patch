@@ -16289,7 +16289,7 @@ index 3b07e731e8d16c2b71cb55b85163029cf56fd02e..816fae86e0ff6e7a7abe330dd8df3928
  
      @Override
 diff --git a/net/minecraft/world/entity/animal/bee/Bee.java b/net/minecraft/world/entity/animal/bee/Bee.java
-index 525280c15e8ac32c9fdcf0c62ff1343f5aeaddcd..ef32d9bd91cf9a09441f3ef75dac1e4034dcedb0 100644
+index c8cb5bb059c06f440d32e88cbd517a5aab6963da..1bb9431ff56420d64eb9a1e9ebfda25b1ddc8643 100644
 --- a/net/minecraft/world/entity/animal/bee/Bee.java
 +++ b/net/minecraft/world/entity/animal/bee/Bee.java
 @@ -812,6 +812,11 @@ public class Bee extends Animal implements NeutralMob {
