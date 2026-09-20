@@ -11079,7 +11079,7 @@ index 3509df9dd423b38d1ca3e4a420d1352ae95d3551..c473bc729c813592f0015aad570b8a9c
              }
          }
 diff --git a/net/minecraft/server/level/ServerChunkCache.java b/net/minecraft/server/level/ServerChunkCache.java
-index 62bb6d371dd30466a6be7c70c8cf4fdd77927c88..e8bd0b2d8f3be72c2e824b92c08a8d07f58ce68a 100644
+index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a46c05e49 100644
 --- a/net/minecraft/server/level/ServerChunkCache.java
 +++ b/net/minecraft/server/level/ServerChunkCache.java
 @@ -70,10 +70,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
@@ -11156,15 +11156,8 @@ index 62bb6d371dd30466a6be7c70c8cf4fdd77927c88..e8bd0b2d8f3be72c2e824b92c08a8d07
                  // Paper start - per player mob spawning backoff
                  for (int j = 0; j < ServerPlayer.MOBCATEGORY_TOTAL_ENUMS; j++) {
                      player.mobCounts[j] = 0;
-@@ -546,31 +551,31 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
-                 }
-                 // Paper end - per player mob spawning backoff
-             }
--            spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this.level.getAllEntities(), this::getFullChunk, null, true);
-+            spawnCookie = NaturalSpawner.createState(chunkCount, this.level, regionizedWorldData.getLoadedEntities(), this::getFullChunk, null, true); // Folia - region threading - note: function only cares about loaded entities, doesn't need all
-         } else {
--            spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this.level.getAllEntities(), this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false);
-+            spawnCookie = NaturalSpawner.createState(chunkCount, this.level, regionizedWorldData.getLoadedEntities(), this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false); // Folia - region threading - note: function only cares about loaded entities, doesn't need all
+@@ -551,26 +556,26 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+             spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false);
          }
          // Paper end - Optional per player mob spawns
 -        this.lastSpawnState = spawnCookie;
@@ -13378,7 +13371,7 @@ index 2f3b58491ef7be8cd2e081f2c44869cd1e50e6a6..37d5f9a73277de083a25a80e7808e049
              }
              // Spigot end
 diff --git a/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index 215197dd52614bbce416f56a7f66db6b048ab479..dca99f800310499b3da690b2eda55d5062a8439d 100644
+index 572b28fa8df0f441c07c5728e5b95c0337b189c0..7114ae983352bc6e505fa913a4cba73b8dd65811 100644
 --- a/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 @@ -305,10 +305,10 @@ public class ServerGamePacketListenerImpl
@@ -14751,7 +14744,7 @@ index bb5f66c62c9541bb76a9faad9e9ee91c1466fc6a..66d7bb9418832638c220a08d06c01ef0
              return blockToFallLocation(blockState);
          } else {
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index ef72b4a4b8fa2f6ebcfb59b2dd0466bce028a1ed..b010256dd1758532d2f998c55c1d72219dc59f10 100644
+index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..fdfd2e12647d7747b96ca79c5317efcc035f9ac9 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -174,7 +174,7 @@ public abstract class Entity
@@ -18148,10 +18141,19 @@ index ad225fe3eccf6d649566c47f8d6fd162fe92d6f5..2e7a40336999c89a648cbdaabc9be4de
      default boolean hasChunksAt(final int x0, final int z0, final int x1, final int z1) {
          int chunkX0 = SectionPos.blockToSectionCoord(x0);
 diff --git a/net/minecraft/world/level/NaturalSpawner.java b/net/minecraft/world/level/NaturalSpawner.java
-index a1962aef1a0cf8fcc0549f53f5e1299a2e1845ed..a4e686d2bfbece755c90632017a4b361874ae198 100644
+index 06c63a3429d010546c8b9de610cbae7bf6bb6935..43da3372eea605ecf398c939c3df94213862afc7 100644
 --- a/net/minecraft/world/level/NaturalSpawner.java
 +++ b/net/minecraft/world/level/NaturalSpawner.java
-@@ -134,7 +134,7 @@ public final class NaturalSpawner {
+@@ -80,7 +80,7 @@ public final class NaturalSpawner {
+         final boolean countMobs
+     ) {
+         // Paper end - Optional per player mob spawns
+-        Iterable<Entity> entities = level.getAllEntities();
++        Iterable<Entity> entities = level.getCurrentWorldData().getLoadedEntities(); // Folia - region threading - note: function only cares about loaded entities, doesn't need all
+         PotentialCalculator spawnPotential = new PotentialCalculator();
+         Object2IntOpenHashMap<MobCategory> mobCounts = new Object2IntOpenHashMap<>();
+ 
+@@ -133,7 +133,7 @@ public final class NaturalSpawner {
              int limit = mobCategory.getMaxInstancesPerChunk();
              org.bukkit.entity.SpawnCategory spawnCategory = org.bukkit.craftbukkit.util.CraftSpawnCategory.toBukkit(mobCategory);
              if (org.bukkit.craftbukkit.util.CraftSpawnCategory.isValidForLimits(spawnCategory)) {

@@ -1010,7 +1010,7 @@ index 6488e1da573a27bc4b7052748ac7bd40eaac9d39..ee2ed8dab9abbd137b728904038e7db3
      // Paper end - optimise entity tracker
  
 diff --git a/net/minecraft/server/level/ServerChunkCache.java b/net/minecraft/server/level/ServerChunkCache.java
-index e8bd0b2d8f3be72c2e824b92c08a8d07f58ce68a..e77b9ae1666ea13d20b6ae3d490c73ddb8f2c856 100644
+index c2bfe8c5f1dbbf9f0861985139caf82a46c05e49..98fe27d24adb93b9891cca251bb236ac1bf92d34 100644
 --- a/net/minecraft/server/level/ServerChunkCache.java
 +++ b/net/minecraft/server/level/ServerChunkCache.java
 @@ -157,6 +157,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
@@ -1091,7 +1091,7 @@ index e8bd0b2d8f3be72c2e824b92c08a8d07f58ce68a..e77b9ae1666ea13d20b6ae3d490c73dd
              for (ServerPlayer player : this.level.getLocalPlayers()) { // Folia - region threading
 @@ -555,6 +571,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
          } else {
-             spawnCookie = NaturalSpawner.createState(chunkCount, this.level, regionizedWorldData.getLoadedEntities(), this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false); // Folia - region threading - note: function only cares about loaded entities, doesn't need all
+             spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false);
          }
 +        } finally { foliaProfiler.stopTimer(ca.spottedleaf.leafprofiler.LProfilerRegistry.MOB_SPAWN_ENTITY_COUNT); } // Folia - profiler
          // Paper end - Optional per player mob spawns
