@@ -3469,10 +3469,10 @@ index 5f9002b16c71530e97994ee8277159352a20b362..d3ea6260c71e03297b753056817b2478
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftSulfurCube.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftSulfurCube.java
-index 7a2e9c8d693cc0f3b672c1f1bd8d6b676cf00e3a..248f249286af5dccf36a101b39b8ce5670d0062d 100644
+index a9eb5aa70941edb611e91ee71d0f4103b481ef8f..d346211bc468ad61ce66ce4f39e77fb89f301253 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftSulfurCube.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftSulfurCube.java
-@@ -19,6 +19,7 @@ public class CraftSulfurCube extends CraftAbstractCubeMob implements SulfurCube,
+@@ -21,6 +21,7 @@ public class CraftSulfurCube extends CraftAbstractCubeMob implements SulfurCube,
  
      @Override
      public net.minecraft.world.entity.monster.cubemob.SulfurCube getHandle() {
