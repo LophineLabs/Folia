@@ -13144,9 +13144,18 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
          this.removeStingerTime = 0;
          this.setArrowCount(0, true); // CraftBukkit - ArrowBodyCountChangeEvent
 diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
-index a901aa6547c52643d11249c201688341e2961f01..3005659db116bc859aedd022d2d6dea5b71866f2 100644
+index a901aa6547c52643d11249c201688341e2961f01..95be871dab750c2e25a9f4bf97e1dbda72e6d46d 100644
 --- a/net/minecraft/server/level/ServerPlayerGameMode.java
 +++ b/net/minecraft/server/level/ServerPlayerGameMode.java
+@@ -58,7 +58,7 @@ public class ServerPlayerGameMode {
+     public ServerPlayerGameMode(final ServerPlayer player) {
+         this.player = player;
+         this.level = player.level();
+-        this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating; start in the same clock as tick()
++        // this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating; start in the same clock as tick() // Folia - region threading - We can't get that here because the data didn't bind to a region
+     }
+ 
+     @Deprecated @io.papermc.paper.annotation.DoNotUse // Paper
 @@ -135,7 +135,7 @@ public class ServerPlayerGameMode {
          // this.gameTicks = net.minecraft.server.MinecraftServer.currentTick; // CraftBukkit
          this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating
