@@ -11348,7 +11348,7 @@ index cc6f4e2845ef1e95c765d65f17c8aa1b06652927..7316c756f1c228eef710219a659c7968
                  foundPlayers.add(player);
              }
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index 88148640e3476c041f589b3991d8e5b7bfde1613..5beafe1ef569ff5e1964f76d743fe1a10e04db49 100644
+index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4ec22ca813 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
 @@ -193,11 +193,11 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
@@ -12495,7 +12495,7 @@ index 88148640e3476c041f589b3991d8e5b7bfde1613..5beafe1ef569ff5e1964f76d743fe1a1
                  for (ServerPlayer player : ServerLevel.this.server.getPlayerList().getPlayers()) { // Paper - call onEntityRemove for all online players
                      player.getBukkitEntity().onEntityRemove(entity);
 @@ -3243,11 +3363,11 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
-     private long lagCompensationTick = MinecraftServer.SERVER_INIT;
+     private long lagCompensationTick = currentLagCompensationTick();
  
      public long getLagCompensationTick() {
 -        return this.lagCompensationTick;
@@ -12503,11 +12503,11 @@ index 88148640e3476c041f589b3991d8e5b7bfde1613..5beafe1ef569ff5e1964f76d743fe1a1
      }
  
      public void updateLagCompensationTick() {
--        this.lagCompensationTick = (System.nanoTime() - MinecraftServer.SERVER_INIT) / (java.util.concurrent.TimeUnit.MILLISECONDS.toNanos(50L));
+-        this.lagCompensationTick = currentLagCompensationTick();
 +        throw new UnsupportedOperationException(); // Folia - region threading
      }
-     // Paper end - lag compensation
- }
+ 
+     private static long currentLagCompensationTick() {
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
 index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e9cadb53b 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
@@ -13144,10 +13144,10 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
          this.removeStingerTime = 0;
          this.setArrowCount(0, true); // CraftBukkit - ArrowBodyCountChangeEvent
 diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
-index 2ec5cc549ccaf5ecdf991241cfa2fc11cdec6aaa..adbf7e063b7defedb644aa47d93b3c7c42adb430 100644
+index a901aa6547c52643d11249c201688341e2961f01..3005659db116bc859aedd022d2d6dea5b71866f2 100644
 --- a/net/minecraft/server/level/ServerPlayerGameMode.java
 +++ b/net/minecraft/server/level/ServerPlayerGameMode.java
-@@ -134,7 +134,7 @@ public class ServerPlayerGameMode {
+@@ -135,7 +135,7 @@ public class ServerPlayerGameMode {
          // this.gameTicks = net.minecraft.server.MinecraftServer.currentTick; // CraftBukkit
          this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating
          if (this.hasDelayedDestroy) {
@@ -13156,7 +13156,7 @@ index 2ec5cc549ccaf5ecdf991241cfa2fc11cdec6aaa..adbf7e063b7defedb644aa47d93b3c7c
              if (blockState == null || blockState.isAir()) { // Paper - Don't allow digging into unloaded chunks
                  this.hasDelayedDestroy = false;
              } else {
-@@ -146,7 +146,7 @@ public class ServerPlayerGameMode {
+@@ -147,7 +147,7 @@ public class ServerPlayerGameMode {
              }
          } else if (this.isDestroyingBlock) {
              // Paper start - Don't allow digging into unloaded chunks; don't want to do same logic as above, return instead
@@ -13165,7 +13165,7 @@ index 2ec5cc549ccaf5ecdf991241cfa2fc11cdec6aaa..adbf7e063b7defedb644aa47d93b3c7c
              if (blockState == null) {
                  this.isDestroyingBlock = false;
                  return;
-@@ -416,7 +416,7 @@ public class ServerPlayerGameMode {
+@@ -417,7 +417,7 @@ public class ServerPlayerGameMode {
  
          // CraftBukkit start
          org.bukkit.block.BlockState bState = bblock.getState();
@@ -13174,7 +13174,7 @@ index 2ec5cc549ccaf5ecdf991241cfa2fc11cdec6aaa..adbf7e063b7defedb644aa47d93b3c7c
          // CraftBukkit end
          BlockState adjustedState = block.playerWillDestroy(this.level, pos, state, this.player);
          boolean changed = this.level.removeBlock(pos, false);
-@@ -442,8 +442,8 @@ public class ServerPlayerGameMode {
+@@ -443,8 +443,8 @@ public class ServerPlayerGameMode {
          } // CraftBukkit
  
          // CraftBukkit start
