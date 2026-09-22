@@ -13144,7 +13144,7 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
          this.removeStingerTime = 0;
          this.setArrowCount(0, true); // CraftBukkit - ArrowBodyCountChangeEvent
 diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
-index a901aa6547c52643d11249c201688341e2961f01..95be871dab750c2e25a9f4bf97e1dbda72e6d46d 100644
+index a901aa6547c52643d11249c201688341e2961f01..c056e0a521cb86884205473677e74057a70dbdc7 100644
 --- a/net/minecraft/server/level/ServerPlayerGameMode.java
 +++ b/net/minecraft/server/level/ServerPlayerGameMode.java
 @@ -58,7 +58,7 @@ public class ServerPlayerGameMode {
@@ -13152,7 +13152,7 @@ index a901aa6547c52643d11249c201688341e2961f01..95be871dab750c2e25a9f4bf97e1dbda
          this.player = player;
          this.level = player.level();
 -        this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating; start in the same clock as tick()
-+        // this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating; start in the same clock as tick() // Folia - region threading - We can't get that here because the data didn't bind to a region
++        // this.gameTicks = (int) this.level.getLagCompensationTick(); // Paper - lag compensate eating; start in the same clock as tick() // Folia - region threading
      }
  
      @Deprecated @io.papermc.paper.annotation.DoNotUse // Paper
@@ -14020,7 +14020,7 @@ index 6f18226ea5e01900d4d7683567e33d65a8baf384..46315f29c6415f949023d45947e38dac
              parsedDate = defaultValue;
          }
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index 42fd84f078eb3268d820de8f211e78023eab85f9..5b67e63ae656e227f9eb527a9b6e8de6c9a270e4 100644
+index a7f589970a04e520eb5cbe6dfeb333bc9cd479a8..f28f10483b9f739caa69567b8141935d67d5f33d 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
 @@ -113,10 +113,10 @@ public abstract class PlayerList {
@@ -14362,7 +14362,7 @@ index 42fd84f078eb3268d820de8f211e78023eab85f9..5b67e63ae656e227f9eb527a9b6e8de6
      }
  
      public UserWhiteList getWhiteList() {
-@@ -1079,6 +1150,20 @@ public abstract class PlayerList {
+@@ -1082,6 +1153,20 @@ public abstract class PlayerList {
      }
  
      public void removeAll(boolean isRestarting) {
@@ -14383,7 +14383,7 @@ index 42fd84f078eb3268d820de8f211e78023eab85f9..5b67e63ae656e227f9eb527a9b6e8de6
          // Paper end
          // CraftBukkit start - disconnect safely
          for (ServerPlayer player : this.players) {
-@@ -1088,7 +1173,7 @@ public abstract class PlayerList {
+@@ -1091,7 +1176,7 @@ public abstract class PlayerList {
          // CraftBukkit end
  
          // Paper start - Configurable player collision; Remove collideRule team if it exists
