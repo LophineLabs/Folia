@@ -321,10 +321,10 @@ index 78659864651362de4fc104cbeb3e2e9a31b101d9..4e13aee3cd89204e1e8eb2b4bd276fec
          final List<SectionToUnload> ret = new ArrayList<>();
  
 diff --git a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
-index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d71b352ad5 100644
+index 1e05aab0a259bd0073c4761e419edf90fb175814..9146c313ed54759a0b9251f99ff502357a5378e4 100644
 --- a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
 +++ b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
-@@ -61,6 +61,14 @@ import java.util.concurrent.atomic.AtomicReference;
+@@ -62,6 +62,14 @@ import java.util.concurrent.atomic.AtomicReference;
  import java.util.concurrent.locks.LockSupport;
  import java.util.function.Predicate;
  
@@ -339,7 +339,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
  public final class ChunkHolderManager {
  
      private static final Logger LOGGER = LogUtils.getClassLogger();
-@@ -82,30 +90,83 @@ public final class ChunkHolderManager {
+@@ -83,30 +91,83 @@ public final class ChunkHolderManager {
      private final ConcurrentChainedLong2ReferenceHashTable<NewChunkHolder> chunkHolders = ConcurrentChainedLong2ReferenceHashTable.createWithCapacity(16384, 0.25f);
      private final ServerLevel world;
      private final ChunkTaskScheduler taskScheduler;
@@ -438,7 +438,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
  
      // mapping of counter id -> (mapping of pos->count)
      private final ConcurrentChainedLong2ReferenceHashTable<ConcurrentChainedLong2LongHashTable> ticketCounters = new ConcurrentChainedLong2ReferenceHashTable<>();
-@@ -192,8 +253,13 @@ public final class ChunkHolderManager {
+@@ -193,8 +254,13 @@ public final class ChunkHolderManager {
      }
  
      public void close(final boolean save, final boolean halt) {
@@ -453,7 +453,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
              LOGGER.info("Waiting 60s for chunk system to halt for world '" + WorldUtil.getWorldName(this.world) + "'");
              if (!this.taskScheduler.halt(true, TimeUnit.SECONDS.toNanos(60L))) {
                  LOGGER.warn("Failed to halt generation/loading tasks for world '" + WorldUtil.getWorldName(this.world) + "'");
-@@ -203,9 +269,10 @@ public final class ChunkHolderManager {
+@@ -204,9 +270,10 @@ public final class ChunkHolderManager {
          }
  
          if (save) {
@@ -465,7 +465,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
          MoonriseRegionFileIO.flush(this.world);
  
          if (halt) {
-@@ -227,28 +294,35 @@ public final class ChunkHolderManager {
+@@ -228,28 +295,35 @@ public final class ChunkHolderManager {
          }
  
          this.taskScheduler.setShutdown(true);
@@ -508,7 +508,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
  
              holder.lastAutoSave = currentTick;
              if (holder.save(false) != null) {
-@@ -262,16 +336,43 @@ public final class ChunkHolderManager {
+@@ -263,16 +337,43 @@ public final class ChunkHolderManager {
  
          for (final NewChunkHolder holder : reschedule) {
              if (holder.getChunkStatus().isOrAfter(FullChunkStatus.FULL)) {
@@ -555,7 +555,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
              if (emergency) {
                  LOGGER.info("Emergency saving all chunkholders for world '" + WorldUtil.getWorldName(this.world) + "'");
              } else {
-@@ -304,6 +405,12 @@ public final class ChunkHolderManager {
+@@ -305,6 +406,12 @@ public final class ChunkHolderManager {
          }
          for (int i = 0, len = holders.size(); i < len; ++i) {
              final NewChunkHolder holder = holders.get(i);
@@ -568,7 +568,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
              try {
                  final NewChunkHolder.SaveStat saveStat = holder.save(shutdown);
                  if (saveStat != null) {
-@@ -339,7 +446,7 @@ public final class ChunkHolderManager {
+@@ -340,7 +447,7 @@ public final class ChunkHolderManager {
                  }
              }
          }
@@ -577,7 +577,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
              MoonriseRegionFileIO.flush(this.world);
              try {
                  MoonriseRegionFileIO.flushRegionStorages(this.world);
-@@ -809,7 +916,13 @@ public final class ChunkHolderManager {
+@@ -810,7 +917,13 @@ public final class ChunkHolderManager {
      }
  
      public void tick() {
@@ -592,7 +592,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
  
          final int sectionShift = ((ChunkSystemServerLevel)this.world).moonrise$getRegionChunkShift();
  
-@@ -818,7 +931,7 @@ public final class ChunkHolderManager {
+@@ -819,7 +932,7 @@ public final class ChunkHolderManager {
  
          Ticket[] removedList = new Ticket[4];
  
@@ -601,7 +601,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
              final long sectionKey = iterator.nextLong();
  
              if (!this.sectionToChunkToExpireCount.containsKey(sectionKey)) {
-@@ -1129,21 +1242,55 @@ public final class ChunkHolderManager {
+@@ -1130,21 +1243,55 @@ public final class ChunkHolderManager {
          if (changedFullStatus.isEmpty()) {
              return;
          }
@@ -663,10 +663,10 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
          holder.onUnload();
 -        this.autoSaveQueue.remove(holder);
 +        this.getCurrentRegionData().autoSaveQueue.remove(holder); // Folia - region threading
+         ((ChunkSystemServerChunkCache)this.world.getChunkSource()).moonrise$chunkHolderUnload(holder);
          PlatformHooks.get().onChunkHolderDelete(this.world, holder.vanillaChunkHolder);
          this.chunkHolders.remove(CoordinateUtils.getChunkKey(holder.chunkX, holder.chunkZ));
-     }
-@@ -1156,7 +1303,7 @@ public final class ChunkHolderManager {
+@@ -1158,7 +1305,7 @@ public final class ChunkHolderManager {
              throw new IllegalStateException("Cannot unload chunks recursively");
          }
          final int sectionShift = this.unloadQueue.coordinateShift; // sectionShift <= lock shift
@@ -675,7 +675,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
          int unloadCountTentative = 0;
          for (final ChunkUnloadQueue.SectionToUnload sectionRef : unloadSectionsForRegion) {
              final ChunkUnloadQueue.UnloadSection section
-@@ -1461,22 +1608,17 @@ public final class ChunkHolderManager {
+@@ -1463,22 +1610,17 @@ public final class ChunkHolderManager {
          return CURRENT_TICKET_UPDATE_SCHEDULING.get();
      }
  
@@ -706,7 +706,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
  
          boolean ret = false;
  
-@@ -1492,9 +1634,7 @@ public final class ChunkHolderManager {
+@@ -1494,9 +1636,7 @@ public final class ChunkHolderManager {
              ret |= holder.handleFullStatusChange(changedFullStatus);
  
              if (!changedFullStatus.isEmpty()) {
@@ -718,7 +718,7 @@ index e418820359c430b91bb91eb65d137b9cdbe2db4b..25263ada9e9414427e27980c3f07f4d7
              }
          }
 diff --git a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkTaskScheduler.java b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkTaskScheduler.java
-index 2aa7a2bb7adcd0ed53f2538368f890b75b114ecf..d7ebd94a9aa26d3dbb0c5888e1848a5c8205f81f 100644
+index bbba1766ed9da671022c467a45f7de479fb6abb4..244f7af564d3460ece33c00c7c23b071893159d8 100644
 --- a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkTaskScheduler.java
 +++ b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkTaskScheduler.java
 @@ -114,7 +114,7 @@ public final class ChunkTaskScheduler {
@@ -830,7 +830,7 @@ index 2aa7a2bb7adcd0ed53f2538368f890b75b114ecf..d7ebd94a9aa26d3dbb0c5888e1848a5c
      public boolean halt(final boolean sync, final long maxWaitNS) {
          this.parallelGenExecutor.halt();
 diff --git a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/NewChunkHolder.java b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/NewChunkHolder.java
-index 9a9a599ef178f851ee5c783631a724013a693586..fdb0bcdca1cd38f55f191d42e422c354af4452b5 100644
+index 7a0006f9b56d1e43b06f9f7452e1b5bb0ec53e72..c078a3f9dfa7cc053ef7ca26a238debe1c66cd6a 100644
 --- a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/NewChunkHolder.java
 +++ b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/NewChunkHolder.java
 @@ -1350,7 +1350,7 @@ public final class NewChunkHolder {
@@ -11079,7 +11079,7 @@ index 3509df9dd423b38d1ca3e4a420d1352ae95d3551..c473bc729c813592f0015aad570b8a9c
              }
          }
 diff --git a/net/minecraft/server/level/ServerChunkCache.java b/net/minecraft/server/level/ServerChunkCache.java
-index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a46c05e49 100644
+index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c57e5287f 100644
 --- a/net/minecraft/server/level/ServerChunkCache.java
 +++ b/net/minecraft/server/level/ServerChunkCache.java
 @@ -70,10 +70,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
@@ -11094,7 +11094,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
      // Paper start
      public final ca.spottedleaf.concurrentutil.map.concurrent.longs.ConcurrentChainedLong2ReferenceHashTable<net.minecraft.world.level.chunk.LevelChunk> fullChunks = new ca.spottedleaf.concurrentutil.map.concurrent.longs.ConcurrentChainedLong2ReferenceHashTable<>();
      public int getFullChunksCount() {
-@@ -99,6 +96,11 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -104,6 +101,11 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
      }
  
      private ChunkAccess syncLoad(final int chunkX, final int chunkZ, final ChunkStatus toStatus) {
@@ -11106,7 +11106,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
          final ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler chunkTaskScheduler = ((ca.spottedleaf.moonrise.patches.chunk_system.level.ChunkSystemServerLevel)this.level).moonrise$getChunkTaskScheduler();
          final CompletableFuture<ChunkAccess> completable = new CompletableFuture<>();
          chunkTaskScheduler.scheduleChunkLoad(
-@@ -160,7 +162,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -165,7 +167,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
          // TODO check on update: impl of forEachBlockTickingChunk will only iterate ENTITY ticking chunks!
          // TODO check on update: consumer just runs tickChunk
@@ -11115,7 +11115,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
  
          // note: we can use the backing array here because:
          // 1. we do not care about new additions
-@@ -346,6 +348,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -351,6 +353,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
      }
  
      public CompletableFuture<ChunkResult<ChunkAccess>> getChunkFuture(final int x, final int z, final ChunkStatus targetStatus, final boolean loadOrGenerate) {
@@ -11123,7 +11123,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
          boolean isMainThread = Thread.currentThread() == this.mainThread;
          CompletableFuture<ChunkResult<ChunkAccess>> serverFuture;
          if (isMainThread) {
-@@ -513,27 +516,29 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -518,27 +521,29 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
      }
  
      private void broadcastChangedChunks(final ProfilerFiller profiler) {
@@ -11156,7 +11156,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
                  // Paper start - per player mob spawning backoff
                  for (int j = 0; j < ServerPlayer.MOBCATEGORY_TOTAL_ENUMS; j++) {
                      player.mobCounts[j] = 0;
-@@ -551,26 +556,26 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -556,26 +561,26 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
              spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false);
          }
          // Paper end - Optional per player mob spawns
@@ -11188,7 +11188,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
  
          try {
              profiler.popPush("filteringSpawningChunks");
-@@ -655,18 +660,23 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -660,18 +665,23 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
          int zc = SectionPos.blockToSectionCoord(pos.getZ());
          ChunkHolder chunk = this.getVisibleChunkIfPresent(ChunkPos.pack(xc, zc));
          if (chunk != null && chunk.blockChanged(pos)) {
@@ -11216,7 +11216,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
      }
  
      public boolean hasActiveTickets() {
-@@ -781,7 +791,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -786,7 +796,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
      @VisibleForDebug
      public NaturalSpawner.@Nullable SpawnState getLastSpawnState() {
@@ -11226,7 +11226,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
      }
  
      public void deactivateTicketsOnClosing() {
-@@ -790,7 +801,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -795,7 +806,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
      public void onChunkReadyToSend(final ChunkHolder chunk) {
          if (chunk.hasChangesToBroadcast()) {
@@ -11235,7 +11235,7 @@ index cdf64cbd84460f88d29583e9bd3bc644eb607395..c2bfe8c5f1dbbf9f0861985139caf82a
          }
      }
  
-@@ -819,20 +830,76 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -824,20 +835,76 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
              return ServerChunkCache.this.mainThread;
          }
  
@@ -19642,10 +19642,10 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
          public void tick() {
              this.ticker.tick();
 diff --git a/net/minecraft/world/level/chunk/storage/SerializableChunkData.java b/net/minecraft/world/level/chunk/storage/SerializableChunkData.java
-index 3781b2707163357bae5f5482694c94a927b54d58..1105ada050aa3e9a67abc4d00a193308a4e482eb 100644
+index 3fef98e8c3c9908c6f05ded33596cbcb18996c3d..9d7423926efd3f73fa24150f8893e0f2d38b5e25 100644
 --- a/net/minecraft/world/level/chunk/storage/SerializableChunkData.java
 +++ b/net/minecraft/world/level/chunk/storage/SerializableChunkData.java
-@@ -500,7 +500,7 @@ public record SerializableChunkData(
+@@ -502,7 +502,7 @@ public record SerializableChunkData(
              heightmaps.put(entry.getKey(), (long[])data.clone());
          }
  
