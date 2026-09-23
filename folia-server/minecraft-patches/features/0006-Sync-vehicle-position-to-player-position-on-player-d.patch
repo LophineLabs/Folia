@@ -7,7 +7,7 @@ This allows the player to be re-positioned before logging into
 the world without causing thread checks to trip on Folia.
 
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index 9f83675bcaaf172c5405278e4467885e9cadb53b..ffe83f486821d4148880cb75cea963a1bc9d9cbe 100644
+index 29e804e1258a18313b76b1742bcb30a103c0cfb9..c677eae9c7bc2b4cf67c8de69b7ab315e62b61d9 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -736,8 +736,18 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc

@@ -11079,7 +11079,7 @@ index 3509df9dd423b38d1ca3e4a420d1352ae95d3551..c473bc729c813592f0015aad570b8a9c
              }
          }
 diff --git a/net/minecraft/server/level/ServerChunkCache.java b/net/minecraft/server/level/ServerChunkCache.java
-index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c57e5287f 100644
+index 66d706d2a7995b437d102903012a714c38e4876c..68241c18f8822a764381df960cda2ade4d2b69ec 100644
 --- a/net/minecraft/server/level/ServerChunkCache.java
 +++ b/net/minecraft/server/level/ServerChunkCache.java
 @@ -70,10 +70,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
@@ -11094,7 +11094,18 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
      // Paper start
      public final ca.spottedleaf.concurrentutil.map.concurrent.longs.ConcurrentChainedLong2ReferenceHashTable<net.minecraft.world.level.chunk.LevelChunk> fullChunks = new ca.spottedleaf.concurrentutil.map.concurrent.longs.ConcurrentChainedLong2ReferenceHashTable<>();
      public int getFullChunksCount() {
-@@ -104,6 +101,11 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -100,10 +97,21 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+ 
+     @Override
+     public void moonrise$chunkHolderUnload(final ca.spottedleaf.moonrise.patches.chunk_system.scheduling.NewChunkHolder chunkHolder) {
+-        this.chunkHoldersToBroadcast.remove(chunkHolder.vanillaChunkHolder);
++        // Folia start - region threading
++        if (ca.spottedleaf.moonrise.common.util.TickThread.isTickThread()) {
++            ca.spottedleaf.moonrise.common.util.TickThread.ensureTickThread(this.level, chunkHolder.chunkX, chunkHolder.chunkZ, "Cannot asynchronously load chunks");
++        }
++        io.papermc.paper.threadedregions.RegionizedWorldData regionizedWorldData = this.level.getCurrentWorldData();
++        regionizedWorldData.chunkHoldersToBroadcast.remove(chunkHolder.vanillaChunkHolder);
++        // Folia end - region threading
      }
  
      private ChunkAccess syncLoad(final int chunkX, final int chunkZ, final ChunkStatus toStatus) {
@@ -11106,7 +11117,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
          final ca.spottedleaf.moonrise.patches.chunk_system.scheduling.ChunkTaskScheduler chunkTaskScheduler = ((ca.spottedleaf.moonrise.patches.chunk_system.level.ChunkSystemServerLevel)this.level).moonrise$getChunkTaskScheduler();
          final CompletableFuture<ChunkAccess> completable = new CompletableFuture<>();
          chunkTaskScheduler.scheduleChunkLoad(
-@@ -165,7 +167,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -165,7 +173,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
          // TODO check on update: impl of forEachBlockTickingChunk will only iterate ENTITY ticking chunks!
          // TODO check on update: consumer just runs tickChunk
@@ -11115,7 +11126,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
  
          // note: we can use the backing array here because:
          // 1. we do not care about new additions
-@@ -351,6 +353,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -351,6 +359,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
      }
  
      public CompletableFuture<ChunkResult<ChunkAccess>> getChunkFuture(final int x, final int z, final ChunkStatus targetStatus, final boolean loadOrGenerate) {
@@ -11123,7 +11134,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
          boolean isMainThread = Thread.currentThread() == this.mainThread;
          CompletableFuture<ChunkResult<ChunkAccess>> serverFuture;
          if (isMainThread) {
-@@ -518,27 +521,29 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -518,27 +527,29 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
      }
  
      private void broadcastChangedChunks(final ProfilerFiller profiler) {
@@ -11156,7 +11167,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
                  // Paper start - per player mob spawning backoff
                  for (int j = 0; j < ServerPlayer.MOBCATEGORY_TOTAL_ENUMS; j++) {
                      player.mobCounts[j] = 0;
-@@ -556,26 +561,26 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -556,26 +567,26 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
              spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false);
          }
          // Paper end - Optional per player mob spawns
@@ -11188,7 +11199,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
  
          try {
              profiler.popPush("filteringSpawningChunks");
-@@ -660,18 +665,23 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -660,18 +671,23 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
          int zc = SectionPos.blockToSectionCoord(pos.getZ());
          ChunkHolder chunk = this.getVisibleChunkIfPresent(ChunkPos.pack(xc, zc));
          if (chunk != null && chunk.blockChanged(pos)) {
@@ -11216,7 +11227,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
      }
  
      public boolean hasActiveTickets() {
-@@ -786,7 +796,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -786,7 +802,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
      @VisibleForDebug
      public NaturalSpawner.@Nullable SpawnState getLastSpawnState() {
@@ -11226,7 +11237,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
      }
  
      public void deactivateTicketsOnClosing() {
-@@ -795,7 +806,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -795,7 +812,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
      public void onChunkReadyToSend(final ChunkHolder chunk) {
          if (chunk.hasChangesToBroadcast()) {
@@ -11235,7 +11246,7 @@ index 66d706d2a7995b437d102903012a714c38e4876c..d214c2fac6e863eba814ab094228be5c
          }
      }
  
-@@ -824,20 +835,76 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -824,20 +841,76 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
              return ServerChunkCache.this.mainThread;
          }
  
@@ -12509,7 +12520,7 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4e
  
      private static long currentLagCompensationTick() {
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e9cadb53b 100644
+index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..29e804e1258a18313b76b1742bcb30a103c0cfb9 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -212,7 +212,7 @@ import org.slf4j.Logger;
@@ -12739,7 +12750,7 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
              // CraftBukkit end
          } catch (Throwable t) {
              CrashReport report = CrashReport.forThrowable(t, "Ticking player");
-@@ -1518,8 +1677,322 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -1531,8 +1690,322 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
          }
      }
  
@@ -13062,7 +13073,7 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
          if (this.isSleeping()) return null; // CraftBukkit - SPIGOT-3154
          if (this.isRemoved()) {
              return null;
-@@ -2581,7 +3054,30 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -2594,7 +3067,30 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
          return this.camera == null ? this : this.camera;
      }
  
@@ -13093,7 +13104,7 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
          Entity oldCamera = this.getCamera();
          this.camera = newCamera == null ? this : newCamera;
          if (oldCamera != this.camera) {
-@@ -2600,16 +3096,19 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -2613,16 +3109,19 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
                  }
              }
              // Paper end - Add PlayerStartSpectatingEntityEvent and PlayerStopSpectatingEntity
@@ -13120,7 +13131,7 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
          }
      }
  
-@@ -2952,11 +3451,11 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -2965,11 +3464,11 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
      }
  
      public void registerEnderPearl(final ThrownEnderpearl enderPearl) {
@@ -13134,7 +13145,7 @@ index 4227d7b652b989bb86bff6960545c323dc535e46..9f83675bcaaf172c5405278e4467885e
      }
  
      public Set<ThrownEnderpearl> getEnderPearls() {
-@@ -3158,7 +3657,7 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
+@@ -3171,7 +3670,7 @@ public class ServerPlayer extends Player implements ca.spottedleaf.moonrise.patc
          this.experienceLevel = this.newLevel;
          this.totalExperience = this.newTotalExp;
          this.experienceProgress = 0;
