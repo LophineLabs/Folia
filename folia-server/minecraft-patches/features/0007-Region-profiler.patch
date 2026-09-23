@@ -1010,10 +1010,10 @@ index 6488e1da573a27bc4b7052748ac7bd40eaac9d39..ee2ed8dab9abbd137b728904038e7db3
      // Paper end - optimise entity tracker
  
 diff --git a/net/minecraft/server/level/ServerChunkCache.java b/net/minecraft/server/level/ServerChunkCache.java
-index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9c2db1c84 100644
+index 64f3bd729642230b3d945cf5810622eb6b126a3a..cf2b6690c1748e49ed4648cb6954ab99ee3bc300 100644
 --- a/net/minecraft/server/level/ServerChunkCache.java
 +++ b/net/minecraft/server/level/ServerChunkCache.java
-@@ -165,6 +165,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -162,6 +162,8 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
      // Paper start - chunk tick iteration optimisations
      private final ca.spottedleaf.moonrise.common.util.SimpleThreadUnsafeRandom shuffleRandom = new ca.spottedleaf.moonrise.common.util.SimpleThreadUnsafeRandom(0L);
      private void iterateTickingChunksFaster() {
@@ -1022,7 +1022,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
          final ServerLevel world = this.level;
          final int randomTickSpeed = world.getGameRules().get(GameRules.RANDOM_TICK_SPEED);
  
-@@ -176,7 +178,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -173,7 +175,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
          // 1. we do not care about new additions
          // 2. _removes_ are impossible at this stage in the tick
          final LevelChunk[] raw = entityTickingChunks.getRawDataUnchecked();
@@ -1031,7 +1031,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
  
          java.util.Objects.checkFromToIndex(0, size, raw.length);
          for (int i = 0; i < size; ++i) {
-@@ -188,6 +190,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -185,6 +187,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
                  continue;
              }
          }
@@ -1039,7 +1039,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
      }
      // Paper end - chunk tick iteration optimisations
  
-@@ -488,17 +491,24 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -485,17 +488,24 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
      @Override
      public void tick(final BooleanSupplier haveTime, final boolean tickChunks) {
@@ -1064,7 +1064,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
              this.chunkMap.tick();
          }
  
-@@ -518,7 +528,11 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -515,7 +525,11 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
                  profiler.pop();
              }
  
@@ -1076,7 +1076,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
              profiler.pop();
          }
      }
-@@ -540,10 +554,12 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -537,10 +551,12 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
      private void tickChunks(final ProfilerFiller profiler) {
          io.papermc.paper.threadedregions.RegionizedWorldData regionizedWorldData = this.level.getCurrentWorldData(); // Folia - region threading
@@ -1089,7 +1089,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
          if ((this.spawnFriendlies || this.spawnEnemies) && this.level.paperConfig().entities.spawning.perPlayerMobSpawns) { // don't count mobs when animals and monsters are disabled
              // re-set mob counts
              for (ServerPlayer player : this.level.getLocalPlayers()) { // Folia - region threading
-@@ -563,6 +579,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -560,6 +576,7 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
          } else {
              spawnCookie = NaturalSpawner.createState(chunkCount, this.level, this::getFullChunk, !this.level.paperConfig().entities.spawning.perPlayerMobSpawns ? new LocalMobCapCalculator(this.chunkMap) : null, false);
          }
@@ -1097,7 +1097,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
          // Paper end - Optional per player mob spawns
          regionizedWorldData.lastSpawnState = spawnCookie; // Folia - region threading
          boolean doMobSpawning = this.level.getGameRules().get(GameRules.SPAWN_MOBS) && !this.level.getLocalPlayers().isEmpty(); // CraftBukkit // Folia - region threading
-@@ -587,7 +604,9 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -584,7 +601,9 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
  
          try {
              profiler.popPush("filteringSpawningChunks");
@@ -1107,7 +1107,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
              profiler.popPush("shuffleSpawningChunks");
              // Paper start - chunk tick iteration optimisation
              this.shuffleRandom.setSeed(this.level.getRandom().nextLong());
-@@ -595,9 +614,12 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -592,9 +611,12 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
              // Paper end - chunk tick iteration optimisation
              profiler.popPush("tickSpawningChunks");
  
@@ -1120,7 +1120,7 @@ index dfcb183d841a648a9c4c4ec80ab2ed6e60deb06b..c8038aa04be4016edd02ceb7bdced8d9
          } finally {
              spawningChunks.clear();
          }
-@@ -606,7 +628,9 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
+@@ -603,7 +625,9 @@ public class ServerChunkCache extends ChunkSource implements ca.spottedleaf.moon
          this.iterateTickingChunksFaster(); // Paper - chunk tick iteration optimizations
          if (doMobSpawning) {
              profiler.popPush("customSpawners");
