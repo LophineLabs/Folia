@@ -7325,7 +7325,7 @@ index 7cbcc8865893ea4f7fae8da13f534c65fcdcd216..fa52d458d402ae9121eaa8b876d8d6b4
      }
  
 diff --git a/net/minecraft/commands/Commands.java b/net/minecraft/commands/Commands.java
-index fb816ac65e382eac207afd56185a73c440c6245a..a37006d09aebf2c7bd4978f0c204a81973116c4f 100644
+index fb816ac65e382eac207afd56185a73c440c6245a..3bab87d0f5a6fb6e24ab9d5f9cd7aa458f15fae1 100644
 --- a/net/minecraft/commands/Commands.java
 +++ b/net/minecraft/commands/Commands.java
 @@ -200,16 +200,16 @@ public class Commands {
@@ -7351,7 +7351,7 @@ index fb816ac65e382eac207afd56185a73c440c6245a..a37006d09aebf2c7bd4978f0c204a819
          DifficultyCommand.register(this.dispatcher);
          EffectCommands.register(this.dispatcher, context);
          EmoteCommands.register(this.dispatcher);
-@@ -218,54 +218,54 @@ public class Commands {
+@@ -218,17 +218,17 @@ public class Commands {
          FillCommand.register(this.dispatcher, context);
          FillBiomeCommand.register(this.dispatcher, context);
          ForceLoadCommand.register(this.dispatcher);
@@ -7372,10 +7372,9 @@ index fb816ac65e382eac207afd56185a73c440c6245a..a37006d09aebf2c7bd4978f0c204a819
          MsgCommand.register(this.dispatcher);
          SwingCommand.register(this.dispatcher);
          ParticleCommand.register(this.dispatcher, context);
-         PlaceCommand.register(this.dispatcher, context);
+@@ -236,36 +236,36 @@ public class Commands {
          PlaySoundCommand.register(this.dispatcher);
--        PostEffectCommand.register(this.dispatcher);
-+        //PostEffectCommand.register(this.dispatcher); // Folia - region threading - TODO later
+         PostEffectCommand.register(this.dispatcher);
          RandomCommand.register(this.dispatcher);
 -        ReloadCommand.register(this.dispatcher);
 +        //ReloadCommand.register(this.dispatcher); // Folia - region threading
@@ -9906,6 +9905,98 @@ index 7a65ea8e61928bb607391ab224b70c8b5e260112..ca87479b6cef213dc3e4ea4e8d2cd3e4
      }
  
      private static void checkLoaded(final ServerLevel level, final ChunkPos chunkMin, final ChunkPos chunkMax) throws CommandSyntaxException {
+diff --git a/net/minecraft/server/commands/PostEffectCommand.java b/net/minecraft/server/commands/PostEffectCommand.java
+index f47e5120339b26246ddbf412e35dcf0982f4a709..e51b8cae15addb4949084f3d1aabcaa0ef003c12 100644
+--- a/net/minecraft/server/commands/PostEffectCommand.java
++++ b/net/minecraft/server/commands/PostEffectCommand.java
+@@ -98,25 +98,48 @@ public class PostEffectCommand {
+ 
+     private static int addPostEffect(final CommandSourceStack source, final Collection<ServerPlayer> players, final Identifier posteffect) throws CommandSyntaxException {
+         CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
+-
++        // Folia start - region threading
+         for (ServerPlayer player : players) {
+-            tracker.track(player, player.addPostEffect(posteffect));
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> ref.get().addPostEffect(posteffect));
+         }
+ 
+-        return tracker.sendFeedback(source, true, RESPONSE_ADD, posteffect);
++        Runnable task = () -> {
++            try {
++                tracker.sendFeedback(source, true, RESPONSE_ADD, posteffect);
++            } catch (CommandSyntaxException e) {
++                source.sendFailure((Component)e.getRawMessage());
++            }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private static int clearPostEffect(final CommandSourceStack source, final Collection<ServerPlayer> players) throws CommandSyntaxException {
+         CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
+ 
++        // Folia start - region threading
+         for (ServerPlayer player : players) {
+-            tracker.track(player, player.clearPostEffects());
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> ref.get().clearPostEffects());
+         }
+ 
+-        return tracker.sendFeedback(source, true, RESPONSE_CLEAR);
++        Runnable task = () -> {
++            try {
++                tracker.sendFeedback(source, true, RESPONSE_CLEAR);
++            } catch (CommandSyntaxException e) {
++                source.sendFailure((Component)e.getRawMessage());
++            }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private static int listPostEffects(final CommandSourceStack source, final ServerPlayer player) {
++        // Folia start - region threading
++        player.getBukkitEntity().taskScheduler.scheduleOrExecute(playerEntity -> {
+         List<Identifier> postEffects = player.getPostEffects();
+         if (postEffects.isEmpty()) {
+             source.sendSuccess(() -> Component.translatable("commands.posteffect.list.empty", player.getDisplayName()), false);
+@@ -124,17 +147,29 @@ public class PostEffectCommand {
+             String names = postEffects.stream().map(Identifier::toString).collect(Collectors.joining(", "));
+             source.sendSuccess(() -> Component.translatable("commands.posteffect.list.success", player.getDisplayName(), postEffects.size(), names), false);
+         }
++        });
+ 
+-        return postEffects.size();
++        return 1;
++        // Folia end - region threading
+     }
+ 
+     private static int removePostEffect(final CommandSourceStack source, final Collection<ServerPlayer> players, final Identifier posteffect) throws CommandSyntaxException {
+         CommandResponseTracker<ServerPlayer> tracker = CommandResponseTracker.create();
+-
++        // Folia start - region threading
+         for (ServerPlayer player : players) {
+-            tracker.track(player, player.removePostEffect(posteffect));
++            java.util.concurrent.atomic.AtomicReference<ServerPlayer> ref = new java.util.concurrent.atomic.AtomicReference<>(player);
++            tracker.track(ref, () -> ref.get().removePostEffect(posteffect));
+         }
+ 
+-        return tracker.sendFeedback(source, true, RESPONSE_REMOVE, posteffect);
++        Runnable task = () -> {
++            try {
++                tracker.sendFeedback(source, true, RESPONSE_REMOVE, posteffect);
++            } catch (CommandSyntaxException e) {
++                source.sendFailure((Component)e.getRawMessage());
++            }
++        };
++        tracker.onComplete(task);
++        return 1;
++        // Folia end - region threading
+     }
+ }
 diff --git a/net/minecraft/server/commands/RecipeCommand.java b/net/minecraft/server/commands/RecipeCommand.java
 index 4b542121c5c774ddb20a0709e29b99dbc6d84dad..245dcbd8e71af0a399a257066af8236fae16d3d5 100644
 --- a/net/minecraft/server/commands/RecipeCommand.java
