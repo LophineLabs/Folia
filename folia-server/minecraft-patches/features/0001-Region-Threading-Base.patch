@@ -13385,7 +13385,7 @@ index 2f3b58491ef7be8cd2e081f2c44869cd1e50e6a6..37d5f9a73277de083a25a80e7808e049
              }
              // Spigot end
 diff --git a/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e8137b072b7 100644
+index ee52233d15df9de9f5a0a85dcac7f7f38f8c004d..fd2814311c6d450d64e245231d448ef0986e9596 100644
 --- a/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 @@ -305,10 +305,10 @@ public class ServerGamePacketListenerImpl
@@ -13521,7 +13521,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
          } else if (!completions.isEmpty()) {
              // Handle non-recoverable exceptions
              com.mojang.brigadier.StringReader reader = new com.mojang.brigadier.StringReader(packet.command());
-@@ -1384,11 +1417,11 @@ public class ServerGamePacketListenerImpl
+@@ -1382,11 +1415,11 @@ public class ServerGamePacketListenerImpl
          }
          // Paper end - Book size limits
          // CraftBukkit start
@@ -13535,7 +13535,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
          // CraftBukkit end
          int slot = packet.slot();
          if (Inventory.isHotbarSlot(slot) || slot == 40) {
-@@ -1399,7 +1432,13 @@ public class ServerGamePacketListenerImpl
+@@ -1397,7 +1430,13 @@ public class ServerGamePacketListenerImpl
              Consumer<List<FilteredText>> handler = title.isPresent()
                  ? filteredContents -> this.signBook(filteredContents.get(0), filteredContents.subList(1, filteredContents.size()), slot)
                  : filteredContents -> this.updateBookContents(filteredContents, slot);
@@ -13550,7 +13550,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
          }
      }
  
-@@ -1562,9 +1601,10 @@ public class ServerGamePacketListenerImpl
+@@ -1560,9 +1599,10 @@ public class ServerGamePacketListenerImpl
                      this.receivedMovePacketCount++;
                      int deltaPackets = this.receivedMovePacketCount - this.knownMovePacketCount;
                      // CraftBukkit start - handle custom speeds and skipped ticks
@@ -13563,7 +13563,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
  
                      if (deltaPackets > Math.max(this.allowedPlayerTicks, 5)) {
                      // CraftBukkit end - handle custom speeds and skipped ticks
-@@ -1730,7 +1770,7 @@ public class ServerGamePacketListenerImpl
+@@ -1728,7 +1768,7 @@ public class ServerGamePacketListenerImpl
  
                          // If the event is cancelled we move the player back to their old location.
                          if (event.isCancelled()) {
@@ -13572,7 +13572,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                              return;
                          }
  
-@@ -1738,7 +1778,7 @@ public class ServerGamePacketListenerImpl
+@@ -1736,7 +1776,7 @@ public class ServerGamePacketListenerImpl
                          // there to avoid any 'Moved wrongly' or 'Moved too quickly' errors.
                          // We only do this if the Event was not cancelled.
                          if (!oldTo.equals(event.getTo()) && !event.isCancelled()) {
@@ -13581,7 +13581,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                              return;
                          }
  
-@@ -2048,9 +2088,9 @@ public class ServerGamePacketListenerImpl
+@@ -2046,9 +2086,9 @@ public class ServerGamePacketListenerImpl
                      if (!this.player.isSpectator()) {
                          // limit how quickly items can be dropped
                          // If the ticks aren't the same then the count starts from 0 and we update the lastDropTick.
@@ -13593,7 +13593,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                          } else {
                              // Else we increment the drop count and check the amount.
                              this.dropCount++;
-@@ -2082,7 +2122,7 @@ public class ServerGamePacketListenerImpl
+@@ -2080,7 +2120,7 @@ public class ServerGamePacketListenerImpl
                  case ABORT_DESTROY_BLOCK:
                  case STOP_DESTROY_BLOCK:
                      // Paper start - Don't allow digging into unloaded chunks
@@ -13602,7 +13602,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                          this.player.connection.ackBlockChangesUpTo(packet.getSequence());
                          return;
                      }
-@@ -2171,7 +2211,7 @@ public class ServerGamePacketListenerImpl
+@@ -2169,7 +2209,7 @@ public class ServerGamePacketListenerImpl
                  }
                  // Paper end - improve distance check
                  BlockPos pos = blockHit.getBlockPos();
@@ -13611,7 +13611,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                      Vec3 distance = location.subtract(Vec3.atCenterOf(pos));
                      double limit = 1.0000001;
                      if (Math.abs(distance.x()) < 1.0000001 && Math.abs(distance.y()) < 1.0000001 && Math.abs(distance.z()) < 1.0000001) {
-@@ -2311,7 +2351,7 @@ public class ServerGamePacketListenerImpl
+@@ -2309,7 +2349,7 @@ public class ServerGamePacketListenerImpl
              for (ServerLevel level : this.server.getAllLevels()) {
                  Entity entity = packet.getEntity(level);
                  if (entity != null) {
@@ -13620,7 +13620,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                      return;
                  }
              }
-@@ -2331,7 +2371,7 @@ public class ServerGamePacketListenerImpl
+@@ -2329,7 +2369,7 @@ public class ServerGamePacketListenerImpl
          LOGGER.info("{} lost connection: {}", this.player.getPlainTextName(), details.reason().getString());
          // Paper start - Fix kick event leave message not being sent
          final net.kyori.adventure.text.Component quitMessage = details.quitMessage().map(io.papermc.paper.adventure.PaperAdventure::asAdventure).orElse(null);
@@ -13629,7 +13629,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
          // Paper end - Fix kick event leave message not being sent
          super.onDisconnect(details);
      }
-@@ -2341,6 +2381,8 @@ public class ServerGamePacketListenerImpl
+@@ -2339,6 +2379,8 @@ public class ServerGamePacketListenerImpl
          this.removePlayerFromWorld(null);
      }
  
@@ -13638,7 +13638,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
      private void removePlayerFromWorld(net.kyori.adventure.text.@Nullable Component quitMessage) {
          // Paper end - Fix kick event leave message not being sent
          this.chatMessageChain.close();
-@@ -2354,6 +2396,8 @@ public class ServerGamePacketListenerImpl
+@@ -2352,6 +2394,8 @@ public class ServerGamePacketListenerImpl
          this.player.disconnect();
          // Paper start - Adventure
          quitMessage = quitMessage == null ? this.server.getPlayerList().remove(this.player) : this.server.getPlayerList().remove(this.player, quitMessage); // Paper - pass in quitMessage to fix kick message not being used
@@ -13647,7 +13647,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
          if ((quitMessage != null) && !quitMessage.equals(net.kyori.adventure.text.Component.empty())) {
              this.server.getPlayerList().broadcastSystemMessage(PaperAdventure.asVanilla(quitMessage), false);
              // Paper end - Adventure
-@@ -2593,7 +2637,7 @@ public class ServerGamePacketListenerImpl
+@@ -2591,7 +2635,7 @@ public class ServerGamePacketListenerImpl
              this.player.resetLastActionTime();
              // CraftBukkit start
              if (sync) {
@@ -13656,7 +13656,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
              } else {
                  chatHandler.run();
              }
-@@ -2673,6 +2717,7 @@ public class ServerGamePacketListenerImpl
+@@ -2671,6 +2715,7 @@ public class ServerGamePacketListenerImpl
          if (rawMessage.isEmpty()) {
              LOGGER.warn("{} tried to send an empty message", this.player.getScoreboardName());
          } else if (this.getCraftPlayer().isConversing()) {
@@ -13664,7 +13664,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
              final String conversationInput = rawMessage;
              this.server.processQueue.add(() -> ServerGamePacketListenerImpl.this.getCraftPlayer().acceptConversationInput(conversationInput));
          } else if (this.player.getChatVisibility() == ChatVisiblity.SYSTEM) { // Re-add "Command Only" flag check
-@@ -2880,8 +2925,25 @@ public class ServerGamePacketListenerImpl
+@@ -2878,8 +2923,25 @@ public class ServerGamePacketListenerImpl
      // Spigot end
  
      public void switchToConfig() {
@@ -13691,7 +13691,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
          this.send(ClientboundStartConfigurationPacket.INSTANCE);
          this.connection.setupOutboundProtocol(ConfigurationProtocols.CLIENTBOUND);
      }
-@@ -2905,7 +2967,7 @@ public class ServerGamePacketListenerImpl
+@@ -2903,7 +2965,7 @@ public class ServerGamePacketListenerImpl
              }
              // Spigot end
              this.player.resetLastActionTime();
@@ -13700,7 +13700,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                  AABB targetBounds = target.getBoundingBox();
                  ItemStack mainHandItem = this.player.getMainHandItem();
                  if (this.player.isWithinAttackRange(mainHandItem, targetBounds, io.papermc.paper.configuration.GlobalConfiguration.get().misc.clientInteractionLeniencyDistance.or(3.0))) { // Paper - configurable lenience
-@@ -2948,7 +3010,7 @@ public class ServerGamePacketListenerImpl
+@@ -2946,7 +3008,7 @@ public class ServerGamePacketListenerImpl
              // Spigot end
              this.player.resetLastActionTime();
              this.player.setShiftKeyDown(packet.usingSecondaryAction());
@@ -13709,7 +13709,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                  AABB targetBounds = target.getBoundingBox();
                  if (this.player.isWithinEntityInteractionRange(targetBounds, io.papermc.paper.configuration.GlobalConfiguration.get().misc.clientInteractionLeniencyDistance.or(3.0))) { // Paper - configurable lenience value for interact range
                      InteractionHand hand = packet.hand();
-@@ -3053,6 +3115,12 @@ public class ServerGamePacketListenerImpl
+@@ -3051,6 +3113,12 @@ public class ServerGamePacketListenerImpl
          switch (action) {
              case PERFORM_RESPAWN:
                  if (this.player.wonGame) {
@@ -13722,7 +13722,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                      this.player.wonGame = false;
                      this.player = this.server.getPlayerList().respawn(this.player, true, Entity.RemovalReason.CHANGED_DIMENSION, RespawnReason.END_PORTAL); // CraftBukkit
                      this.resetPosition();
-@@ -3063,6 +3131,17 @@ public class ServerGamePacketListenerImpl
+@@ -3061,6 +3129,17 @@ public class ServerGamePacketListenerImpl
                          return;
                      }
  
@@ -13740,7 +13740,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                      this.player = this.server.getPlayerList().respawn(this.player, false, Entity.RemovalReason.KILLED, RespawnReason.DEATH); // CraftBukkit
                      this.resetPosition();
                      this.restartClientLoadTimerAfterRespawn();
-@@ -3611,7 +3690,14 @@ public class ServerGamePacketListenerImpl
+@@ -3609,7 +3688,14 @@ public class ServerGamePacketListenerImpl
          };
          List<String> lines = packet.lines().stream().map(lineLimiter).map(ChatFormatting::stripFormatting).collect(Collectors.toList());
          // Paper end - limit client sign length
@@ -13756,7 +13756,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
      }
  
      private void updateSignText(final ServerboundSignUpdatePacket packet, final List<FilteredText> lines) {
-@@ -3768,7 +3854,7 @@ public class ServerGamePacketListenerImpl
+@@ -3766,7 +3852,7 @@ public class ServerGamePacketListenerImpl
          this.chatMessageChain
              .append(
                  () -> {
@@ -13765,7 +13765,7 @@ index 1a5498f94f71230b8dde82045ecb6bf785aeeefa..44df9a16089b4622f530b0c78ea47e81
                      this.player.setChatSession(chatSession);
                      this.server
                          .getPlayerList()
-@@ -3875,19 +3961,7 @@ public class ServerGamePacketListenerImpl
+@@ -3873,19 +3959,7 @@ public class ServerGamePacketListenerImpl
  
      @Override
      public void disconnectAsync(final net.minecraft.network.DisconnectionDetails disconnectionInfo) {
