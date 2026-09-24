@@ -12514,7 +12514,7 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4e
  
      private static long currentLagCompensationTick() {
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..29e804e1258a18313b76b1742bcb30a103c0cfb9 100644
+index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..1efa9e5c71ad368b0988e6d52fc3111d4131d203 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -212,7 +212,7 @@ import org.slf4j.Logger;
@@ -13028,7 +13028,7 @@ index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..29e804e1258a18313b76b1742bcb30a1
 +    }
 +
 +    @Override
-+    public boolean endPortalLogicAsync(BlockPos portalPos) {
++    public boolean endPortalLogicAsync(BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete) {
 +        ca.spottedleaf.moonrise.common.util.TickThread.ensureTickThread(this, "Cannot portal entity async");
 +
 +        if (this.level().getTypeKey() == net.minecraft.world.level.dimension.LevelStem.END) {
@@ -13044,7 +13044,7 @@ index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..29e804e1258a18313b76b1742bcb30a1
 +            this.exitEndCredits();
 +            return true;
 +        } else {
-+            return super.endPortalLogicAsync(portalPos);
++            return super.endPortalLogicAsync(portalPos, teleportComplete);
 +        }
 +    }
 +
@@ -13149,7 +13149,7 @@ index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..29e804e1258a18313b76b1742bcb30a1
          this.removeStingerTime = 0;
          this.setArrowCount(0, true); // CraftBukkit - ArrowBodyCountChangeEvent
 diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
-index a901aa6547c52643d11249c201688341e2961f01..c056e0a521cb86884205473677e74057a70dbdc7 100644
+index a901aa6547c52643d11249c201688341e2961f01..e8f21f5f05d7d447855e669e385d00aa44ba8136 100644
 --- a/net/minecraft/server/level/ServerPlayerGameMode.java
 +++ b/net/minecraft/server/level/ServerPlayerGameMode.java
 @@ -58,7 +58,7 @@ public class ServerPlayerGameMode {
@@ -13199,6 +13199,39 @@ index a901aa6547c52643d11249c201688341e2961f01..c056e0a521cb86884205473677e74057
          if (event.isDropItems()) {
              org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockDropItemEvent(bblock, bState, this.player, itemsToDrop); // Paper - capture all item additions to the world
          }
+@@ -574,16 +574,23 @@ public class ServerPlayerGameMode {
+ 
+             if (state.getBlock() instanceof Portal portal) {
+                 ServerLevel serverLevel = player.level();
+-                TeleportTransition teleportTransition = portal.getPortalDestination(serverLevel, player, pos);
+-                if (teleportTransition != null) {
+-                    if (player.getCamera() != player) {
+-                        player.setCamera(player);
+-                    }
++                // Folia start - region threading
++                // however we should delay it by 1 tick to reach a safe point for this operation
++                player.getBukkitEntity().taskScheduler.schedule(playerEntity -> {
++                    final boolean succeed = portal.portalAsync(serverLevel, playerEntity, pos, teleportedEntity -> {
++                        final ServerPlayer teleportedPlayer = (ServerPlayer) teleportedEntity;
++
++                        if (teleportedPlayer.getCamera() != teleportedPlayer) {
++                            teleportedPlayer.setCamera(teleportedPlayer);
++                        }
++                    });
+ 
+-                    player.teleportToPortalDestination(serverLevel, teleportTransition);
+-                } else {
+-                    player.sendOverlayMessage(Component.translatable("spectator.cannot_teleport").withStyle(ChatFormatting.RED));
+-                }
++                    if (!succeed) {
++                        ((ServerPlayer) playerEntity).sendOverlayMessage(Component.translatable("spectator.cannot_teleport").withStyle(ChatFormatting.RED));
++
++                    }
++                }, null, 1L);
++                // Folia end - region threading
+ 
+                 return InteractionResult.CONSUME;
+             } else {
 diff --git a/net/minecraft/server/level/TicketType.java b/net/minecraft/server/level/TicketType.java
 index fed2a68bf1a9e9a169c0235e129346b9b624170b..7e612e03087d63f9b500f7e9f3442b1931bae7ee 100644
 --- a/net/minecraft/server/level/TicketType.java
@@ -14758,7 +14791,7 @@ index bb5f66c62c9541bb76a9faad9e9ee91c1466fc6a..66d7bb9418832638c220a08d06c01ef0
              return blockToFallLocation(blockState);
          } else {
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..fdfd2e12647d7747b96ca79c5317efcc035f9ac9 100644
+index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..db05b3e8391593080c86eadf75fb26ba91b127b5 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -174,7 +174,7 @@ public abstract class Entity
@@ -15401,7 +15434,7 @@ index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..fdfd2e12647d7747b96ca79c5317efcc
 +        NETHER, END;
 +    }
 +
-+    public boolean endPortalLogicAsync(BlockPos portalPos) {
++    public boolean endPortalLogicAsync(BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete) {
 +        ca.spottedleaf.moonrise.common.util.TickThread.ensureTickThread(this, "Cannot portal entity async");
 +
 +        ServerLevel destination = this.level().getServer().getLevel(this.level().getTypeKey() == net.minecraft.world.level.dimension.LevelStem.END ? Level.OVERWORLD : Level.END);
@@ -15410,10 +15443,10 @@ index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..fdfd2e12647d7747b96ca79c5317efcc
 +            return false;
 +        }
 +
-+        return this.portalToAsync(destination, portalPos, true, PortalType.END, null);
++        return this.portalToAsync(destination, portalPos, true, PortalType.END, teleportComplete);
 +    }
 +
-+    public boolean netherPortalLogicAsync(BlockPos portalPos) {
++    public boolean netherPortalLogicAsync(BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete) {
 +        ca.spottedleaf.moonrise.common.util.TickThread.ensureTickThread(this, "Cannot portal entity async");
 +
 +        ServerLevel destination = this.level().getServer().getLevel(this.level().getTypeKey() == net.minecraft.world.level.dimension.LevelStem.NETHER ? Level.OVERWORLD : Level.NETHER);
@@ -15422,7 +15455,7 @@ index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..fdfd2e12647d7747b96ca79c5317efcc
 +            return false;
 +        }
 +
-+        return this.portalToAsync(destination, portalPos, true, PortalType.NETHER, null);
++        return this.portalToAsync(destination, portalPos, true, PortalType.NETHER, teleportComplete);
 +    }
 +
 +    private static final java.util.concurrent.atomic.AtomicLong CREATE_PORTAL_DOUBLE_CHECK = new java.util.concurrent.atomic.AtomicLong();
@@ -16169,7 +16202,7 @@ index 648826138efdc48487c78133893394c9e4908d3f..e99f96ba89c92ee5f1408f8698d71a36
  
      @Override
 diff --git a/net/minecraft/world/entity/PortalProcessor.java b/net/minecraft/world/entity/PortalProcessor.java
-index 7ec15f3d3a770e1e9e2fbac29dd38e947bb07091..d3f0dbd1b8ad5a7aef556b8347ebecdaf0ec18c9 100644
+index 7ec15f3d3a770e1e9e2fbac29dd38e947bb07091..ec767181d7b87a61afbaf3c8cc505e78417e0337 100644
 --- a/net/minecraft/world/entity/PortalProcessor.java
 +++ b/net/minecraft/world/entity/PortalProcessor.java
 @@ -32,6 +32,12 @@ public class PortalProcessor {
@@ -16178,7 +16211,7 @@ index 7ec15f3d3a770e1e9e2fbac29dd38e947bb07091..d3f0dbd1b8ad5a7aef556b8347ebecda
  
 +    // Folia start - region threading
 +    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget) {
-+        return this.portal.portalAsync(sourceWorld, portalTarget, this.entryPosition);
++        return this.portal.portalAsync(sourceWorld, portalTarget, this.entryPosition, null);
 +    }
 +    // Folia end - region threading
 +
@@ -18321,7 +18354,7 @@ index 8d8f558da8643a62130318e24b7d7a88addff9b7..ea4740f4fa7a65a47d16541daee11ba5
          }
          // CraftBukkit end
 diff --git a/net/minecraft/world/level/block/EndGatewayBlock.java b/net/minecraft/world/level/block/EndGatewayBlock.java
-index 4ac1da84017191eb0d415ff0a4ed934538da985d..b14e8ba3ea41951b28ab82c2a0030186baff9549 100644
+index 4ac1da84017191eb0d415ff0a4ed934538da985d..d98a623a79af6d076396921a863e9e8cec2f93ac 100644
 --- a/net/minecraft/world/level/block/EndGatewayBlock.java
 +++ b/net/minecraft/world/level/block/EndGatewayBlock.java
 @@ -104,26 +104,53 @@ public class EndGatewayBlock extends BaseEntityBlock implements Portal {
@@ -18351,7 +18384,7 @@ index 4ac1da84017191eb0d415ff0a4ed934538da985d..b14e8ba3ea41951b28ab82c2a0030186
  
 +    // Folia start - region threading
 +    @Override
-+    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos) {
++    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete) {
 +        if (!ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(portalTarget)) {
 +            return false;
 +        }
@@ -18366,7 +18399,7 @@ index 4ac1da84017191eb0d415ff0a4ed934538da985d..b14e8ba3ea41951b28ab82c2a0030186
 +        }
 +
 +        return TheEndGatewayBlockEntity.teleportRegionThreading(
-+            sourceWorld, portalPos, portalTarget, endGateway, TeleportTransition.PLACE_PORTAL_TICKET
++            sourceWorld, portalPos, portalTarget, endGateway, TeleportTransition.PLACE_PORTAL_TICKET, teleportComplete
 +        );
 +    }
 +
@@ -18394,7 +18427,7 @@ index 4ac1da84017191eb0d415ff0a4ed934538da985d..b14e8ba3ea41951b28ab82c2a0030186
      protected RenderShape getRenderShape(final BlockState state) {
          return RenderShape.INVISIBLE;
 diff --git a/net/minecraft/world/level/block/EndPortalBlock.java b/net/minecraft/world/level/block/EndPortalBlock.java
-index 23a3c9cd26666f909e5b512e276a2fcdcbc42c05..a0aaacdb40ce2e9d305f9f234aa398ad8ecd1b65 100644
+index 23a3c9cd26666f909e5b512e276a2fcdcbc42c05..f06584c0c04eda05772d2f8dff65c9402a3960fd 100644
 --- a/net/minecraft/world/level/block/EndPortalBlock.java
 +++ b/net/minecraft/world/level/block/EndPortalBlock.java
 @@ -65,7 +65,7 @@ public class EndPortalBlock extends BaseEntityBlock implements Portal {
@@ -18412,7 +18445,7 @@ index 23a3c9cd26666f909e5b512e276a2fcdcbc42c05..a0aaacdb40ce2e9d305f9f234aa398ad
  
 +    // Folia start - region threading
 +    @Override
-+    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos) {
++    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete) {
 +        if (!ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(portalTarget)) {
 +            return false;
 +        }
@@ -18420,7 +18453,7 @@ index 23a3c9cd26666f909e5b512e276a2fcdcbc42c05..a0aaacdb40ce2e9d305f9f234aa398ad
 +            return false;
 +        }
 +
-+        return portalTarget.endPortalLogicAsync(portalPos);
++        return portalTarget.endPortalLogicAsync(portalPos, teleportComplete);
 +    }
 +    // Folia end - region threading
 +
@@ -18498,7 +18531,7 @@ index fefb4e7a3bf922be16cf7fb6b70c0689867dd963..696c24eb106125a185a27af29af46284
                  return value;
              })
 diff --git a/net/minecraft/world/level/block/NetherPortalBlock.java b/net/minecraft/world/level/block/NetherPortalBlock.java
-index 28ab25af5929991622629f056f32b1184853cb24..6ace38af2e6972645fde363935fc5469a07ac28c 100644
+index 28ab25af5929991622629f056f32b1184853cb24..0ab3ffcb1497ab445b156674a8439f92c3be05e9 100644
 --- a/net/minecraft/world/level/block/NetherPortalBlock.java
 +++ b/net/minecraft/world/level/block/NetherPortalBlock.java
 @@ -174,6 +174,33 @@ public class NetherPortalBlock extends Block implements Portal {
@@ -18507,7 +18540,7 @@ index 28ab25af5929991622629f056f32b1184853cb24..6ace38af2e6972645fde363935fc5469
  
 +    // Folia start - region threading
 +    @Override
-+    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos) {
++    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete) {
 +        if (!ca.spottedleaf.moonrise.common.util.TickThread.isTickThreadFor(portalTarget)) {
 +            return false;
 +        }
@@ -18515,7 +18548,7 @@ index 28ab25af5929991622629f056f32b1184853cb24..6ace38af2e6972645fde363935fc5469
 +            return false;
 +        }
 +
-+        return portalTarget.netherPortalLogicAsync(portalPos);
++        return portalTarget.netherPortalLogicAsync(portalPos, teleportComplete);
 +    }
 +
 +    public static BlockUtil.FoundRectangle findPortalAround(ServerLevel world, BlockPos rough, WorldBorder worldBorder, int searchRadius) {
@@ -18562,7 +18595,7 @@ index 28ab25af5929991622629f056f32b1184853cb24..6ace38af2e6972645fde363935fc5469
          final BlockUtil.FoundRectangle foundRectangle,
          final Direction.Axis portalAxis,
 diff --git a/net/minecraft/world/level/block/Portal.java b/net/minecraft/world/level/block/Portal.java
-index 3098fa04fe7a282ac008d9c902c8525892e83d31..e6e8a8815f34f077200eea4dc755677c8571dc80 100644
+index 3098fa04fe7a282ac008d9c902c8525892e83d31..bac172c99e26f84f75385ac4844049dfc659f193 100644
 --- a/net/minecraft/world/level/block/Portal.java
 +++ b/net/minecraft/world/level/block/Portal.java
 @@ -13,6 +13,10 @@ public interface Portal {
@@ -18570,7 +18603,7 @@ index 3098fa04fe7a282ac008d9c902c8525892e83d31..e6e8a8815f34f077200eea4dc755677c
      @Nullable TeleportTransition getPortalDestination(final ServerLevel currentLevel, final Entity entity, final BlockPos portalEntryPos);
  
 +    // Folia start - region threading
-+    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos);
++    public boolean portalAsync(ServerLevel sourceWorld, Entity portalTarget, BlockPos portalPos, java.util.function.Consumer<Entity> teleportComplete);
 +    // Folia end - region threading
 +
      default Portal.Transition getLocalTransition() {
@@ -19063,7 +19096,7 @@ index a1b0168077b83575f16dd377da2e1ba520d3bd19..a2e349bb5ab2860f67a7fda4e56f95ca
  
      @Override
 diff --git a/net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java b/net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
-index 0eb38edc4cea67390f998eb5cff4c55146e811d6..53b47d04f3643775ee6b12f40a1c48eeb5f2e794 100644
+index 0eb38edc4cea67390f998eb5cff4c55146e811d6..977511e8f1dba5010d0cce953de3911e688e6c5a 100644
 --- a/net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
 +++ b/net/minecraft/world/level/block/entity/TheEndGatewayBlockEntity.java
 @@ -36,9 +36,12 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
@@ -19080,7 +19113,7 @@ index 0eb38edc4cea67390f998eb5cff4c55146e811d6..53b47d04f3643775ee6b12f40a1c48ee
      public TheEndGatewayBlockEntity(final BlockPos worldPosition, final BlockState blockState) {
          super(BlockEntityTypes.END_GATEWAY, worldPosition, blockState);
      }
-@@ -127,6 +130,104 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
+@@ -127,6 +130,109 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
          }
      }
  
@@ -19131,7 +19164,7 @@ index 0eb38edc4cea67390f998eb5cff4c55146e811d6..53b47d04f3643775ee6b12f40a1c48ee
 +    public static boolean teleportRegionThreading(ServerLevel portalWorld, BlockPos portalPos,
 +                                                  net.minecraft.world.entity.Entity toTeleport,
 +                                                  TheEndGatewayBlockEntity portalTile,
-+                                                  net.minecraft.world.level.portal.TeleportTransition.PostTeleportTransition post) {
++                                                  net.minecraft.world.level.portal.TeleportTransition.PostTeleportTransition post, java.util.function.Consumer<net.minecraft.world.entity.Entity> teleportComplete) {
 +        // can we even teleport in this dimension?
 +        if (portalTile.exitPortal == null && portalWorld.getTypeKey() != net.minecraft.world.level.dimension.LevelStem.END) {
 +            return false;
@@ -19156,8 +19189,9 @@ index 0eb38edc4cea67390f998eb5cff4c55146e811d6..53b47d04f3643775ee6b12f40a1c48ee
 +            // blind teleport
 +            return toTeleport.teleportAsync(
 +                teleport, net.minecraft.world.entity.Entity.TELEPORT_FLAG_LOAD_CHUNK | net.minecraft.world.entity.Entity.TELEPORT_FLAG_TELEPORT_PASSENGERS,
-+                post == null ? null : (net.minecraft.world.entity.Entity teleportedEntity) -> {
-+                    post.onTransition(teleportedEntity);
++                (net.minecraft.world.entity.Entity teleportedEntity) -> {
++                    if (post != null) post.onTransition(teleportedEntity);
++                    if (teleportComplete != null) teleportComplete.accept(teleportedEntity);
 +                }
 +            );
 +        } else {
@@ -19176,6 +19210,10 @@ index 0eb38edc4cea67390f998eb5cff4c55146e811d6..53b47d04f3643775ee6b12f40a1c48ee
 +                    if (post != null) {
 +                        post.onTransition(teleportedEntity);
 +                    }
++
++                    if (teleportComplete != null) {
++                        teleportComplete.accept(teleportedEntity);
++                    }
 +                }
 +            );
 +        }
@@ -19185,7 +19223,7 @@ index 0eb38edc4cea67390f998eb5cff4c55146e811d6..53b47d04f3643775ee6b12f40a1c48ee
      public @Nullable Vec3 getPortalPosition(final ServerLevel currentLevel, final BlockPos portalEntryPos) {
          if (this.exitPortal == null && currentLevel.getTypeKey() == net.minecraft.world.level.dimension.LevelStem.END) { // CraftBukkit - work in alternate worlds
              BlockPos exitPortalPos = findOrCreateValidTeleportPos(currentLevel, portalEntryPos);
-@@ -172,6 +273,124 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
+@@ -172,6 +278,124 @@ public class TheEndGatewayBlockEntity extends TheEndPortalBlockEntity {
          return findTallestBlock(level, exitPortalPos, 16, true);
      }
  
