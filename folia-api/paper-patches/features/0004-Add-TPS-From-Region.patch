@@ -5,10 +5,10 @@ Subject: [PATCH] Add TPS From Region
 
 
 diff --git a/src/main/java/org/bukkit/Bukkit.java b/src/main/java/org/bukkit/Bukkit.java
-index 3fd8ef8afe32117820e29320fde3f8950933ced8..6489d95a1eda3b3ba399eb38f842b7139bbadc4e 100644
+index 52ca9eb5408b81126a614686939574bed5d088c0..1cef96838334692cc2639d9ebbfb1827ad250c46 100644
 --- a/src/main/java/org/bukkit/Bukkit.java
 +++ b/src/main/java/org/bukkit/Bukkit.java
-@@ -2993,6 +2993,42 @@ public final class Bukkit {
+@@ -3001,6 +3001,42 @@ public final class Bukkit {
          return server.isGlobalTickThread();
      }
      // Paper end - Folia region threading API
@@ -52,10 +52,10 @@ index 3fd8ef8afe32117820e29320fde3f8950933ced8..6489d95a1eda3b3ba399eb38f842b713
      /**
       * @deprecated All methods on this class have been deprecated, see the individual methods for replacements.
 diff --git a/src/main/java/org/bukkit/Server.java b/src/main/java/org/bukkit/Server.java
-index 9069939b755b1aaec15be572b979ef908ad61b27..a0e0cb66158cc738476465b6e66fe63eda4f6666 100644
+index ef0069ed4c1d0d0c961ffdcd3159fe5508396bc9..71951f1daec97de2732d6f28d8499555a39bc8c8 100644
 --- a/src/main/java/org/bukkit/Server.java
 +++ b/src/main/java/org/bukkit/Server.java
-@@ -2778,4 +2778,34 @@ public interface Server extends PluginMessageRecipient, net.kyori.adventure.audi
+@@ -2786,4 +2786,34 @@ public interface Server extends PluginMessageRecipient, net.kyori.adventure.audi
       */
      void allowPausing(@NotNull org.bukkit.plugin.Plugin plugin, boolean value);
      // Paper end - API to check if the server is sleeping
