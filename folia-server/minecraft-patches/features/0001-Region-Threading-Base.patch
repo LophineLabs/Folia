@@ -13753,7 +13753,7 @@ index e38acabda1d2e49d88b94d46cc51f6602870d6b6..b1b7bfa011bd4b97896cac51cb36e3f4
              parsedDate = defaultValue;
          }
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index baec5d072b8f2d9379dba850b04e881e5267ca6b..9bbb78ccc6c64930b6c52a3cbc73eb9d81167464 100644
+index 79d33646da088d02c54bbf2824deced107c1ce5f..83118b08a5b9dbaf85244729a6a208bca24e8aef 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
 @@ -111,10 +111,10 @@ public abstract class PlayerList {
@@ -14095,7 +14095,7 @@ index baec5d072b8f2d9379dba850b04e881e5267ca6b..9bbb78ccc6c64930b6c52a3cbc73eb9d
      }
  
      public UserWhiteList getWhiteList() {
-@@ -1079,6 +1150,20 @@ public abstract class PlayerList {
+@@ -1082,6 +1153,20 @@ public abstract class PlayerList {
      }
  
      public void removeAll(boolean isRestarting) {
@@ -14116,7 +14116,7 @@ index baec5d072b8f2d9379dba850b04e881e5267ca6b..9bbb78ccc6c64930b6c52a3cbc73eb9d
          // Paper end
          // CraftBukkit start - disconnect safely
          for (ServerPlayer player : this.players) {
-@@ -1088,7 +1173,7 @@ public abstract class PlayerList {
+@@ -1091,7 +1176,7 @@ public abstract class PlayerList {
          // CraftBukkit end
  
          // Paper start - Configurable player collision; Remove collideRule team if it exists

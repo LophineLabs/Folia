@@ -3077,7 +3077,7 @@ index 999ccf4acdb50be8a7ef0fe4a7f687508fadcde1..80dafb9ce02b7ac7307eb8ea6fa22a76
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
-index 596338c7c9b39284dcaa41c2a2360e5d04c9269e..e20a66e56f2e4520b2708d6ebc377392e4362816 100644
+index ad0f3e3e7b016f531a10b7383432569f97161a79..2f8963e164853ddc5315dd578dfd00d5d582da24 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftPlayer.java
 @@ -247,6 +247,34 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
@@ -3152,7 +3152,7 @@ index 596338c7c9b39284dcaa41c2a2360e5d04c9269e..e20a66e56f2e4520b2708d6ebc377392
          if (this.getHandle().connection == null) {
              return false;
          }
-@@ -1884,7 +1917,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
+@@ -1887,7 +1920,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
      private void unregisterEntity(Entity other) {
          // Paper end
          ChunkMap tracker = ((ServerLevel) this.getHandle().level()).getChunkSource().chunkMap;
@@ -3161,7 +3161,7 @@ index 596338c7c9b39284dcaa41c2a2360e5d04c9269e..e20a66e56f2e4520b2708d6ebc377392
          if (entry != null) {
              entry.removePlayer(this.getHandle());
          }
-@@ -1973,7 +2006,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
+@@ -1976,7 +2009,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
              if (original != null) otherPlayer.setUUID(original); // Paper - uuid override
          }
  
@@ -3170,7 +3170,7 @@ index 596338c7c9b39284dcaa41c2a2360e5d04c9269e..e20a66e56f2e4520b2708d6ebc377392
          if (entry != null && !entry.seenBy.contains(this.getHandle().connection)) {
              entry.updatePlayer(this.getHandle());
          }
-@@ -3044,8 +3077,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
+@@ -3047,8 +3080,7 @@ public class CraftPlayer extends CraftHumanEntity implements Player, PluginMessa
          @Override
          public void respawn() {
              if (CraftPlayer.this.getHealth() <= 0 && CraftPlayer.this.isOnline()) {
