@@ -445,7 +445,7 @@ index 0b35a293f3436bcf8a39c4f07a88340cd9d33bcb..eb868697ecf198db9cf0a89d14553fc5
 +    // Folia end - threaded regions
  }
 diff --git a/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java b/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
-index 7c6e4ffc7653d8a342afb5eef26c8aacdfc69351..952ffd596f3f73051f84ccbc951011526c638bc3 100644
+index 2c510c365c46bd2d3db61ee6ecc662daa25225c7..bcb8acf9cc23b70465e470a80fd70f2f450cbabc 100644
 --- a/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
 +++ b/src/main/java/io/papermc/paper/configuration/WorldConfiguration.java
 @@ -508,6 +508,7 @@ public class WorldConfiguration extends ConfigurationPart {
@@ -456,7 +456,7 @@ index 7c6e4ffc7653d8a342afb5eef26c8aacdfc69351..952ffd596f3f73051f84ccbc95101152
          public AutosavePeriod autoSaveInterval = AutosavePeriod.def();
          public int maxAutoSaveChunksPerTick = 24;
          public int fixedChunkInhabitedTime = -1;
-@@ -526,6 +527,7 @@ public class WorldConfiguration extends ConfigurationPart {
+@@ -528,6 +529,7 @@ public class WorldConfiguration extends ConfigurationPart {
  
          @PostProcess
          private void postProcess() {
