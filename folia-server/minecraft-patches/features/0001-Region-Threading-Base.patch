@@ -7325,7 +7325,7 @@ index 7cbcc8865893ea4f7fae8da13f534c65fcdcd216..fa52d458d402ae9121eaa8b876d8d6b4
      }
  
 diff --git a/net/minecraft/commands/Commands.java b/net/minecraft/commands/Commands.java
-index fb816ac65e382eac207afd56185a73c440c6245a..3bab87d0f5a6fb6e24ab9d5f9cd7aa458f15fae1 100644
+index b50e884e874dc65ccd0900cd18e8435f512ba633..4a266562b3caf4bede1a2c5d25e5f88d2f7e0573 100644
 --- a/net/minecraft/commands/Commands.java
 +++ b/net/minecraft/commands/Commands.java
 @@ -200,16 +200,16 @@ public class Commands {
@@ -7433,10 +7433,10 @@ index fb816ac65e382eac207afd56185a73c440c6245a..3bab87d0f5a6fb6e24ab9d5f9cd7aa45
              SaveOffCommand.register(this.dispatcher);
              SaveOnCommand.register(this.dispatcher);
              SetPlayerIdleTimeoutCommand.register(this.dispatcher);
-@@ -519,9 +519,11 @@ public class Commands {
+@@ -522,9 +522,11 @@ public class Commands {
          }
          // Paper start - Perf: Async command map building
-         new com.destroystokyo.paper.event.brigadier.AsyncPlayerSendCommandsEvent<CommandSourceStack>(player.getBukkitEntity(), (RootCommandNode) root, false).callEvent(); // Paper - Brigadier API
+         new com.destroystokyo.paper.event.brigadier.AsyncPlayerSendCommandsEvent<>(player.getBukkitEntity(), root, false).callEvent(); // Paper - Brigadier API
 -        net.minecraft.server.MinecraftServer.getServer().execute(() -> {
 -            runSync(player, bukkit, root);
 -        });
@@ -13242,7 +13242,7 @@ index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..1efa9e5c71ad368b0988e6d52fc3111d
          this.removeStingerTime = 0;
          this.setArrowCount(0, true); // CraftBukkit - ArrowBodyCountChangeEvent
 diff --git a/net/minecraft/server/level/ServerPlayerGameMode.java b/net/minecraft/server/level/ServerPlayerGameMode.java
-index a901aa6547c52643d11249c201688341e2961f01..e8f21f5f05d7d447855e669e385d00aa44ba8136 100644
+index 81487e9840845de76f58e83cc57b173b5945bab4..e5f75da9190eff8ae1538d392c618906de0f3424 100644
 --- a/net/minecraft/server/level/ServerPlayerGameMode.java
 +++ b/net/minecraft/server/level/ServerPlayerGameMode.java
 @@ -58,7 +58,7 @@ public class ServerPlayerGameMode {
@@ -13272,7 +13272,7 @@ index a901aa6547c52643d11249c201688341e2961f01..e8f21f5f05d7d447855e669e385d00aa
              if (blockState == null) {
                  this.isDestroyingBlock = false;
                  return;
-@@ -417,7 +417,7 @@ public class ServerPlayerGameMode {
+@@ -422,7 +422,7 @@ public class ServerPlayerGameMode {
  
          // CraftBukkit start
          org.bukkit.block.BlockState bState = bblock.getState();
@@ -13281,7 +13281,7 @@ index a901aa6547c52643d11249c201688341e2961f01..e8f21f5f05d7d447855e669e385d00aa
          // CraftBukkit end
          BlockState adjustedState = block.playerWillDestroy(this.level, pos, state, this.player);
          boolean changed = this.level.removeBlock(pos, false);
-@@ -443,8 +443,8 @@ public class ServerPlayerGameMode {
+@@ -448,8 +448,8 @@ public class ServerPlayerGameMode {
          } // CraftBukkit
  
          // CraftBukkit start
@@ -13292,7 +13292,7 @@ index a901aa6547c52643d11249c201688341e2961f01..e8f21f5f05d7d447855e669e385d00aa
          if (event.isDropItems()) {
              org.bukkit.craftbukkit.event.CraftEventFactory.handleBlockDropItemEvent(bblock, bState, this.player, itemsToDrop); // Paper - capture all item additions to the world
          }
-@@ -574,16 +574,23 @@ public class ServerPlayerGameMode {
+@@ -579,16 +579,23 @@ public class ServerPlayerGameMode {
  
              if (state.getBlock() instanceof Portal portal) {
                  ServerLevel serverLevel = player.level();
