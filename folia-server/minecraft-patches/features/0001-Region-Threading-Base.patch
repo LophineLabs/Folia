@@ -16071,13 +16071,13 @@ index cca73fb6f9d7aed48bdbb340d504a5226fdfca86..3d3c0a6e48ac369e8b63766319e3f862
          final UUIDLookup<? extends UniquelyIdentifyable> uuidLookup,
          final Class<StoredEntityType> entityClass
 diff --git a/net/minecraft/world/entity/LivingEntity.java b/net/minecraft/world/entity/LivingEntity.java
-index f332edbc4dad82cbdc02a58aa9ec21faf1f2db89..cb40a236e9ba4b2073205c5d4aa3f1eef0f29c2f 100644
+index d32b58dfd7439f253e48f7a3f059f9154596cc02..f7c4c3d7b25eb99e0e2b0d19a6f799032fb131c8 100644
 --- a/net/minecraft/world/entity/LivingEntity.java
 +++ b/net/minecraft/world/entity/LivingEntity.java
 @@ -279,7 +279,7 @@ public abstract class LivingEntity extends Entity implements Attackable, Waypoin
      private BlockPos lastPos;
      private Optional<BlockPos> lastClimbablePos = Optional.empty();
-     private @Nullable DamageSource lastDamageSource;
+     protected @Nullable DamageSource lastDamageSource; // Paper - Backport MC-311924 fix
 -    private long lastDamageStamp;
 +    private long lastDamageStamp = Long.MIN_VALUE; // Folia - region threading
      protected int autoSpinAttackTicks;
@@ -16747,10 +16747,10 @@ index f846a219726b137272e8d9ed1fca221f52cf3129..c4370f14498010a4b93d409d06a44841
              BlockPos pos = this.blockPosition();
              if (serverLevel.getDragonFight() != null && serverLevel.getBlockState(pos).isAir()) {
 diff --git a/net/minecraft/world/entity/decoration/ItemFrame.java b/net/minecraft/world/entity/decoration/ItemFrame.java
-index bb8f83b544fba6e7d0db0ca59350e5c924752ffb..95d192da01264c050a9488a36f4119bf657e3c67 100644
+index f395b070ee0bf866895f02018798ecbfbb80f6c8..e8b7bac93501380eb5c831921b529fa50b1e949f 100644
 --- a/net/minecraft/world/entity/decoration/ItemFrame.java
 +++ b/net/minecraft/world/entity/decoration/ItemFrame.java
-@@ -267,7 +267,9 @@ public class ItemFrame extends HangingEntity {
+@@ -268,7 +268,9 @@ public class ItemFrame extends HangingEntity {
          if (mapId != null) {
              MapItemSavedData mapItemSavedData = MapItem.getSavedData(mapId, this.level());
              if (mapItemSavedData != null) {
@@ -19791,7 +19791,7 @@ index 3fef98e8c3c9908c6f05ded33596cbcb18996c3d..9d7423926efd3f73fa24150f8893e0f2
              .map(shorts -> shorts != null && !shorts.isEmpty() ? new ShortArrayList(shorts) : null)
              .toArray(ShortList[]::new);
 diff --git a/net/minecraft/world/level/dimension/end/EnderDragonFight.java b/net/minecraft/world/level/dimension/end/EnderDragonFight.java
-index 6061f047f023919bf7e12ed9385798af5b62dced..cf6b3705d2950df8c0e4e76cf3163a4422b5cd09 100644
+index 5440b181eca0a97b42742fdd21f7c27accc0a3ec..56648e26cdb0f5ba13db9bf5dc75d70bc911b1e7 100644
 --- a/net/minecraft/world/level/dimension/end/EnderDragonFight.java
 +++ b/net/minecraft/world/level/dimension/end/EnderDragonFight.java
 @@ -81,7 +81,7 @@ public class EnderDragonFight extends SavedData {
@@ -19803,7 +19803,7 @@ index 6061f047f023919bf7e12ed9385798af5b62dced..cf6b3705d2950df8c0e4e76cf3163a44
      public final List<Integer> gateways;
      private final BlockPattern exitPortalPattern = BlockPatternBuilder.start()
          .aisle("       ", "       ", "       ", "   #   ", "       ", "       ", "       ")
-@@ -245,6 +245,12 @@ public class EnderDragonFight extends SavedData {
+@@ -246,6 +246,12 @@ public class EnderDragonFight extends SavedData {
          }
  
          List<? extends EnderDragon> entities = this.level.getDragons();
@@ -19816,7 +19816,7 @@ index 6061f047f023919bf7e12ed9385798af5b62dced..cf6b3705d2950df8c0e4e76cf3163a44
          if (entities.isEmpty()) {
              this.dragonKilled = true;
          } else {
-@@ -365,8 +371,15 @@ public class EnderDragonFight extends SavedData {
+@@ -367,8 +373,15 @@ public class EnderDragonFight extends SavedData {
  
          ChunkPos chunkOrigin = ChunkPos.containing(this.origin);
  
@@ -19834,7 +19834,7 @@ index 6061f047f023919bf7e12ed9385798af5b62dced..cf6b3705d2950df8c0e4e76cf3163a44
                  if (!(this.level.getChunk(x, z, ChunkStatus.FULL, false) instanceof LevelChunk levelChunk)) {
                      return false;
                  }
-@@ -534,6 +547,11 @@ public class EnderDragonFight extends SavedData {
+@@ -536,6 +549,11 @@ public class EnderDragonFight extends SavedData {
      }
  
      public void onCrystalDestroyed(final EndCrystal crystal, final DamageSource source) {
@@ -19846,7 +19846,7 @@ index 6061f047f023919bf7e12ed9385798af5b62dced..cf6b3705d2950df8c0e4e76cf3163a44
          if (this.respawnStage != null && this.respawnCrystals.stream().anyMatch(ref -> ref.matches(crystal))) {
              this.abortRespawnSequence();
          } else {
-@@ -564,7 +582,7 @@ public class EnderDragonFight extends SavedData {
+@@ -567,7 +585,7 @@ public class EnderDragonFight extends SavedData {
  
      public boolean tryRespawn(@Nullable final BlockPos placedEndCrystalPos) { // placedEndCrystalPos is null if the tryRespawn() call was not caused by a placed end crystal
          // Paper end - Perf: Do crystal-portal proximity check before entity lookup
