@@ -940,7 +940,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
  
      @Override
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
-index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c1523bc58 100644
+index b4ab638117aba89d48021bef48ca0e9d3a123b89..5cf7e043e46b5a72eec0d196ef55bfc760c23b89 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftWorld.java
 @@ -238,7 +238,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
@@ -1122,7 +1122,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          if (this.world.hasChunkAt(pos)) {
              net.minecraft.world.level.chunk.LevelChunk chunk = this.world.getChunkAt(pos);
  
-@@ -1188,6 +1201,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1183,6 +1196,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setStorm(boolean hasStorm) {
@@ -1130,7 +1130,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          this.world.getWeatherData().setRaining(hasStorm, WeatherChangeEvent.Cause.PLUGIN);
          this.setWeatherDuration(0); // Reset weather duration (legacy behaviour)
          this.setClearWeatherDuration(0); // Reset clear weather duration (reset "/weather clear" commands)
-@@ -1200,6 +1214,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1195,6 +1209,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setWeatherDuration(int duration) {
@@ -1138,7 +1138,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          this.world.getWeatherData().setRainTime(duration);
      }
  
-@@ -1210,6 +1225,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1205,6 +1220,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setThundering(boolean thundering) {
@@ -1146,7 +1146,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          this.world.getWeatherData().setThundering(thundering, ThunderChangeEvent.Cause.PLUGIN);
          this.setThunderDuration(0); // Reset weather duration (legacy behaviour)
          this.setClearWeatherDuration(0); // Reset clear weather duration (reset "/weather clear" commands)
-@@ -1222,6 +1238,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1217,6 +1233,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setThunderDuration(int duration) {
@@ -1154,7 +1154,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          this.world.getWeatherData().setThunderTime(duration);
      }
  
-@@ -1232,6 +1249,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1227,6 +1244,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setClearWeatherDuration(int duration) {
@@ -1162,7 +1162,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          this.world.getWeatherData().setClearWeatherTime(duration);
      }
  
-@@ -1484,11 +1502,13 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1479,11 +1497,13 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setHardcore(boolean hardcore) {
@@ -1176,7 +1176,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          Preconditions.checkArgument(spawnCategory != null, "SpawnCategory cannot be null");
          Preconditions.checkArgument(CraftSpawnCategory.isValidForLimits(spawnCategory), "SpawnCategory.%s are not supported", spawnCategory);
  
-@@ -1505,21 +1525,25 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1500,21 +1520,25 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setMetadata(String metadataKey, MetadataValue newMetadataValue) {
@@ -1202,7 +1202,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          this.server.getWorldMetadata().removeMetadata(this, metadataKey, owningPlugin);
      }
  
-@@ -1541,6 +1565,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1536,6 +1560,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void setSpawnLimit(SpawnCategory spawnCategory, int limit) {
@@ -1210,7 +1210,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          Preconditions.checkArgument(spawnCategory != null, "SpawnCategory cannot be null");
          Preconditions.checkArgument(CraftSpawnCategory.isValidForLimits(spawnCategory), "SpawnCategory.%s are not supported", spawnCategory);
  
-@@ -1598,7 +1623,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1593,7 +1618,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
          if (!(entity instanceof CraftEntity craftEntity) || entity.getWorld() != this || sound == null || category == null) return;
  
          ClientboundSoundEntityPacket packet = new ClientboundSoundEntityPacket(CraftSound.bukkitToMinecraftHolder(sound), net.minecraft.sounds.SoundSource.valueOf(category.name()), craftEntity.getHandle(), volume, pitch, seed);
@@ -1219,7 +1219,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          if (entityTracker != null) {
              entityTracker.sendToTrackingPlayersAndSelf(packet);
          }
-@@ -1619,7 +1644,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1614,7 +1639,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
          if (!(entity instanceof CraftEntity craftEntity) || entity.getWorld() != this || sound == null || category == null) return;
  
          ClientboundSoundEntityPacket packet = new ClientboundSoundEntityPacket(Holder.direct(SoundEvent.createVariableRangeEvent(Identifier.parse(sound))), net.minecraft.sounds.SoundSource.valueOf(category.name()), craftEntity.getHandle(), volume, pitch, seed);
@@ -1228,7 +1228,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          if (entityTracker != null) {
              entityTracker.sendToTrackingPlayersAndSelf(packet);
          }
-@@ -1670,6 +1695,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1665,6 +1690,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
      @SuppressWarnings({"unchecked", "rawtypes"})
      @Override
      public boolean setGameRuleValue(String rule, String value) {
@@ -1236,7 +1236,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          // No null values allowed
          if (rule == null || value == null) return false;
  
-@@ -1715,6 +1741,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1710,6 +1736,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public <T> boolean setGameRule(org.bukkit.@NotNull GameRule<T> rule, @NotNull T newValue) {
@@ -1244,7 +1244,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          Preconditions.checkArgument(rule != null, "GameRule cannot be null");
          Preconditions.checkArgument(newValue != null, "GameRule value cannot be null");
  
-@@ -1863,6 +1890,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1858,6 +1885,12 @@ public class CraftWorld extends CraftRegionAccessor implements World {
  
      @Override
      public void sendGameEvent(Entity sourceEntity, org.bukkit.GameEvent gameEvent, Vector position) {
@@ -1257,7 +1257,7 @@ index f7ce4bf2f1eb3236bde5a91d4ada9eca2787e9d2..0e598ec805493de97c75bc5304f2a49c
          getHandle().gameEvent(sourceEntity != null ? ((CraftEntity) sourceEntity).getHandle(): null, net.minecraft.core.registries.BuiltInRegistries.GAME_EVENT.get(org.bukkit.craftbukkit.util.CraftNamespacedKey.toMinecraft(gameEvent.getKey())).orElseThrow(), org.bukkit.craftbukkit.util.CraftVector.toBlockPos(position));
      }
      // Paper end
-@@ -1926,7 +1959,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
+@@ -1921,7 +1954,7 @@ public class CraftWorld extends CraftRegionAccessor implements World {
          Preconditions.checkArgument(radius >= 0, "Radius value (%s) cannot be negative", radius);
  
          Raids persistentRaid = this.world.getRaids();
