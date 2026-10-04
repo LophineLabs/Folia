@@ -1562,10 +1562,10 @@ index 0000000000000000000000000000000000000000..8e25ab1c8ae026e51ce4d711c9084fdf
 \ No newline at end of file
 diff --git a/io/papermc/paper/threadedregions/RegionizedServer.java b/io/papermc/paper/threadedregions/RegionizedServer.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..aa575f3b76ef70ffb9f0410e7e5cfe7af384bfbd
+index 0000000000000000000000000000000000000000..cefe62d3c55e8399c712b8b0fc19ec7ffc14ba49
 --- /dev/null
 +++ b/io/papermc/paper/threadedregions/RegionizedServer.java
-@@ -0,0 +1,427 @@
+@@ -0,0 +1,430 @@
 +package io.papermc.paper.threadedregions;
 +
 +import ca.spottedleaf.common.util.TimeUtil;
@@ -1942,6 +1942,9 @@ index 0000000000000000000000000000000000000000..aa575f3b76ef70ffb9f0410e7e5cfe7a
 +        world.moonrise$getChunkTaskScheduler().chunkHolderManager.processTicketUpdates(); // required to eventually process ticket updates
 +
 +        this.autoSaveMaps(world);
++
++        // random state buffer pool
++        world.getChunkSource().randomState().garbageCollect();
 +    }
 +
 +    private void updateRaids(final ServerLevel world) {
@@ -11446,7 +11449,7 @@ index cc6f4e2845ef1e95c765d65f17c8aa1b06652927..7316c756f1c228eef710219a659c7968
                  foundPlayers.add(player);
              }
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4ec22ca813 100644
+index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..c2592c8879402e2788dd0e4e468b46e24ff2cd67 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
 @@ -193,11 +193,11 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
@@ -11873,7 +11876,7 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4e
          }
  
          profiler.push("entityManagement");
-@@ -928,10 +944,10 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
+@@ -928,16 +944,48 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
          profiler.pop();
          profiler.push("debugSynchronizers");
          if (this.debugSynchronizers.hasAnySubscriberFor(DebugSubscriptions.NEIGHBOR_UPDATES)) {
@@ -11886,10 +11889,11 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4e
          }
  
          this.debugSynchronizers.tick(this.server.debugSubscribers());
-@@ -939,6 +955,38 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
-         this.chunkSource.randomState().garbageCollect();
-     }
- 
+         profiler.pop();
+-        this.chunkSource.randomState().garbageCollect();
++        // this.chunkSource.randomState().garbageCollect();  // Folia - region threading
++    }
++
 +    // Folia start - region threading
 +    public void tickSleep() {
 +        int percentage = this.getGameRules().get(GameRules.PLAYERS_SLEEPING_PERCENTAGE);
@@ -11919,12 +11923,11 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..39c1850072ad79ead612b019fea5fc4e
 +                this.resetWeatherCycle();
 +            }
 +        }
-+    }
+     }
 +    // Folia end - region threading
-+
+ 
      @Override
      public boolean shouldTickBlocksAt(final long chunkPos) {
-         // Paper start - rewrite chunk system
 @@ -949,10 +997,11 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
  
      protected void tickTime() {
@@ -20011,6 +20014,74 @@ index 9900096652c6a3c114b31fb6813a791ba5021db4..db0324595d7f5b6f92bd7724daf181b0
                              if (!player.isSpectator() && (!level.paperConfig().entities.behavior.phantomsDoNotSpawnOnCreativePlayers || !player.isCreative())) { // Paper - Add phantom creative and insomniac controls
                                  BlockPos playerPos = player.blockPosition();
                                  if (!level.dimensionType().hasSkyLight() || playerPos.getY() >= level.getSeaLevel() && level.canSeeSky(playerPos)) {
+diff --git a/net/minecraft/world/level/levelgen/RandomState.java b/net/minecraft/world/level/levelgen/RandomState.java
+index 85ea3ec73fb5474b000d6bc50eddbb8c06d09f49..8566f3502b9f69713031cf68987832a85b67e90d 100644
+--- a/net/minecraft/world/level/levelgen/RandomState.java
++++ b/net/minecraft/world/level/levelgen/RandomState.java
+@@ -35,8 +35,8 @@ public final class RandomState {
+     private final Map<ResourceKey<NormalNoise>, Noise> noiseInstances;
+     private final Map<Identifier, PositionalRandomFactory> positionalRandoms;
+     private final DensityFunctionCompiler densityFunctionCompiler;
+-    private final ReentrantLock densityBufferPoolLock = new ReentrantLock();
+-    private final List<DensityBufferPool> densityBufferPools = new ArrayList<>(16);
++    //private final ReentrantLock densityBufferPoolLock = new ReentrantLock(); // Folia - region threading
++    private final ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<DensityBufferPool> densityBufferPools = new ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<>(); // Folia - region threading
+ 
+     public static RandomState create(final HolderGetter<NormalNoise> noises, final long seed, final NoiseGeneratorSettings settings) {
+         return create(noises, seed, settings.useLegacyRandomSource(), settings.defaultBlock(), settings.seaLevel(), settings.noiseRouter());
+@@ -139,38 +139,27 @@ public final class RandomState {
+     }
+ 
+     public DensityBufferPool acquireDensityBufferPool() {
+-        this.densityBufferPoolLock.lock();
+-
+-        try {
+-            return this.densityBufferPools.isEmpty() ? new DensityBufferPool(20) : this.densityBufferPools.removeLast();
+-        } finally {
+-            this.densityBufferPoolLock.unlock();
+-        }
++        // Folia start - region threading
++        DensityBufferPool poll = this.densityBufferPools.poll();
++        return poll != null ? poll : new DensityBufferPool(20);
++        // Folia end - region threading
+     }
+ 
+     public void releaseDensityBufferPool(final DensityBufferPool pool) {
+-        this.densityBufferPoolLock.lock();
+-
+-        try {
+-            if (this.densityBufferPools.size() < 16) {
+-                this.densityBufferPools.add(pool);
+-            }
+-        } finally {
+-            this.densityBufferPoolLock.unlock();
++        // Folia start - region threading
++        if (this.densityBufferPools.size() < 16) {
++            this.densityBufferPools.offer(pool);
+         }
++        // Folia end - region threading
+     }
+ 
+     public void garbageCollect() {
+-        this.densityBufferPoolLock.lock();
+-
+-        try {
+-            this.densityBufferPools.removeIf(pool -> {
+-                pool.garbageCollect();
+-                return pool.isEmpty();
+-            });
+-        } finally {
+-            this.densityBufferPoolLock.unlock();
+-        }
++        // Folia start - region threading
++        this.densityBufferPools.removeIf(pool -> {
++            pool.garbageCollect();
++            return pool.isEmpty();
++        });
++        // Folia end - region threading
+     }
+ 
+     @Deprecated
 diff --git a/net/minecraft/world/level/levelgen/feature/EndPlatformFeature.java b/net/minecraft/world/level/levelgen/feature/EndPlatformFeature.java
 index aab588e934945c2cec0f7d90f0b2cc22b4e5eb8b..7b1fb75a3a8e038fcc005f7c72b3e7af0c99cda1 100644
 --- a/net/minecraft/world/level/levelgen/feature/EndPlatformFeature.java
