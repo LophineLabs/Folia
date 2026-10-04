@@ -12610,7 +12610,7 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..c2592c8879402e2788dd0e4e468b46e2
  
      private static long currentLagCompensationTick() {
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index 23b3a82ab3e1c6abc85000d9285470cb12300a6b..1efa9e5c71ad368b0988e6d52fc3111d4131d203 100644
+index 119236a8b3ad2d6d81a816d6abdc2b809a753eff..c04b9e1c8acf6a6b2d039e5f114d2ccccffaab5a 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -212,7 +212,7 @@ import org.slf4j.Logger;
@@ -16750,10 +16750,10 @@ index f846a219726b137272e8d9ed1fca221f52cf3129..c4370f14498010a4b93d409d06a44841
              BlockPos pos = this.blockPosition();
              if (serverLevel.getDragonFight() != null && serverLevel.getBlockState(pos).isAir()) {
 diff --git a/net/minecraft/world/entity/decoration/ItemFrame.java b/net/minecraft/world/entity/decoration/ItemFrame.java
-index f395b070ee0bf866895f02018798ecbfbb80f6c8..e8b7bac93501380eb5c831921b529fa50b1e949f 100644
+index 1b88b2427d24deae210be9f69da8c5a30e2d08df..c2da6b155c174a3afc2ab9be844dd69df2dcff89 100644
 --- a/net/minecraft/world/entity/decoration/ItemFrame.java
 +++ b/net/minecraft/world/entity/decoration/ItemFrame.java
-@@ -268,7 +268,9 @@ public class ItemFrame extends HangingEntity {
+@@ -275,7 +275,9 @@ public class ItemFrame extends HangingEntity {
          if (mapId != null) {
              MapItemSavedData mapItemSavedData = MapItem.getSavedData(mapId, this.level());
              if (mapItemSavedData != null) {
