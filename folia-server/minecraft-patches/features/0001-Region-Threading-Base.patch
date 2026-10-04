@@ -20015,7 +20015,7 @@ index 9900096652c6a3c114b31fb6813a791ba5021db4..db0324595d7f5b6f92bd7724daf181b0
                                  BlockPos playerPos = player.blockPosition();
                                  if (!level.dimensionType().hasSkyLight() || playerPos.getY() >= level.getSeaLevel() && level.canSeeSky(playerPos)) {
 diff --git a/net/minecraft/world/level/levelgen/RandomState.java b/net/minecraft/world/level/levelgen/RandomState.java
-index 85ea3ec73fb5474b000d6bc50eddbb8c06d09f49..8566f3502b9f69713031cf68987832a85b67e90d 100644
+index 85ea3ec73fb5474b000d6bc50eddbb8c06d09f49..b72f0a1c66cf2a1d6be2640f43f2a4ab72d31776 100644
 --- a/net/minecraft/world/level/levelgen/RandomState.java
 +++ b/net/minecraft/world/level/levelgen/RandomState.java
 @@ -35,8 +35,8 @@ public final class RandomState {
@@ -20025,11 +20025,11 @@ index 85ea3ec73fb5474b000d6bc50eddbb8c06d09f49..8566f3502b9f69713031cf68987832a8
 -    private final ReentrantLock densityBufferPoolLock = new ReentrantLock();
 -    private final List<DensityBufferPool> densityBufferPools = new ArrayList<>(16);
 +    //private final ReentrantLock densityBufferPoolLock = new ReentrantLock(); // Folia - region threading
-+    private final ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<DensityBufferPool> densityBufferPools = new ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<>(); // Folia - region threading
++    private volatile ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<DensityBufferPool> densityBufferPools = new ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<>(); // Folia - region threading
  
      public static RandomState create(final HolderGetter<NormalNoise> noises, final long seed, final NoiseGeneratorSettings settings) {
          return create(noises, seed, settings.useLegacyRandomSource(), settings.defaultBlock(), settings.seaLevel(), settings.noiseRouter());
-@@ -139,38 +139,27 @@ public final class RandomState {
+@@ -139,38 +139,35 @@ public final class RandomState {
      }
  
      public DensityBufferPool acquireDensityBufferPool() {
@@ -20072,12 +20072,19 @@ index 85ea3ec73fb5474b000d6bc50eddbb8c06d09f49..8566f3502b9f69713031cf68987832a8
 -            });
 -        } finally {
 -            this.densityBufferPoolLock.unlock();
--        }
 +        // Folia start - region threading
-+        this.densityBufferPools.removeIf(pool -> {
++        ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<DensityBufferPool> newPool = new ca.spottedleaf.concurrentutil.collection.MultiThreadedQueue<DensityBufferPool>();
++
++        DensityBufferPool pool;
++        while ((pool = this.densityBufferPools.poll()) != null) {
 +            pool.garbageCollect();
-+            return pool.isEmpty();
-+        });
++
++            if (!pool.isEmpty()) {
++                newPool.offer(pool);
++            }
+         }
++
++        this.densityBufferPools = newPool;
 +        // Folia end - region threading
      }
  
