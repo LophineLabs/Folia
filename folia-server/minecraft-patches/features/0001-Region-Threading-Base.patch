@@ -12610,7 +12610,7 @@ index 8389d812b2d80a122fd1945b3182c08cdeda7d1c..c2592c8879402e2788dd0e4e468b46e2
  
      private static long currentLagCompensationTick() {
 diff --git a/net/minecraft/server/level/ServerPlayer.java b/net/minecraft/server/level/ServerPlayer.java
-index 119236a8b3ad2d6d81a816d6abdc2b809a753eff..c04b9e1c8acf6a6b2d039e5f114d2ccccffaab5a 100644
+index 56ee7ed4bdedbc5f7d12b9ccd547ff3984158b1d..a77f479c55f34bd243c74b1d9fe0b3bdc1b0e734 100644
 --- a/net/minecraft/server/level/ServerPlayer.java
 +++ b/net/minecraft/server/level/ServerPlayer.java
 @@ -212,7 +212,7 @@ import org.slf4j.Logger;
@@ -13514,7 +13514,7 @@ index 2f3b58491ef7be8cd2e081f2c44869cd1e50e6a6..37d5f9a73277de083a25a80e7808e049
              }
              // Spigot end
 diff --git a/net/minecraft/server/network/ServerGamePacketListenerImpl.java b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
-index ee52233d15df9de9f5a0a85dcac7f7f38f8c004d..fd2814311c6d450d64e245231d448ef0986e9596 100644
+index ee455011ff5d35466c1ee2f720c03ecef8d5237a..e080abfdeacafd6951b65c3716e0a47bc111ebd2 100644
 --- a/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 +++ b/net/minecraft/server/network/ServerGamePacketListenerImpl.java
 @@ -305,10 +305,10 @@ public class ServerGamePacketListenerImpl
@@ -13749,15 +13749,6 @@ index ee52233d15df9de9f5a0a85dcac7f7f38f8c004d..fd2814311c6d450d64e245231d448ef0
                      return;
                  }
              }
-@@ -2329,7 +2369,7 @@ public class ServerGamePacketListenerImpl
-         LOGGER.info("{} lost connection: {}", this.player.getPlainTextName(), details.reason().getString());
-         // Paper start - Fix kick event leave message not being sent
-         final net.kyori.adventure.text.Component quitMessage = details.quitMessage().map(io.papermc.paper.adventure.PaperAdventure::asAdventure).orElse(null);
--        this.removePlayerFromWorld(quitMessage);
-+        if (!this.waitingForSwitchToConfig) this.removePlayerFromWorld(quitMessage); // Folia - region threading - don't double remove
-         // Paper end - Fix kick event leave message not being sent
-         super.onDisconnect(details);
-     }
 @@ -2339,6 +2379,8 @@ public class ServerGamePacketListenerImpl
          this.removePlayerFromWorld(null);
      }
@@ -14887,7 +14878,7 @@ index bb5f66c62c9541bb76a9faad9e9ee91c1466fc6a..66d7bb9418832638c220a08d06c01ef0
              return blockToFallLocation(blockState);
          } else {
 diff --git a/net/minecraft/world/entity/Entity.java b/net/minecraft/world/entity/Entity.java
-index cf3619b6de23f32e9e5a81fbe287fb438ecfcabc..db05b3e8391593080c86eadf75fb26ba91b127b5 100644
+index 47b92ca95e423600040dfdff6b8b09891f15e10c..f11e789067a4e94b1dd936c91645e9d3b80cef22 100644
 --- a/net/minecraft/world/entity/Entity.java
 +++ b/net/minecraft/world/entity/Entity.java
 @@ -174,7 +174,7 @@ public abstract class Entity

@@ -1472,30 +1472,6 @@ index 0ab39922e53ebeb044958f99b7f0f06391d78d31..69c0e315c77c0e4b8df048961c39f969
          final ServerLevel level = this.level.getMinecraftWorld();
          this.getBlockState().randomTick(level, this.position, level.getRandom());
      }
-diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlockEntityState.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlockEntityState.java
-index 1ef1943c9934400e40c3c060299c98659709a5cc..0be68c8f104aa7ed5baca11009410ee626249891 100644
---- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlockEntityState.java
-+++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBlockEntityState.java
-@@ -33,7 +33,7 @@ public abstract class CraftBlockEntityState<T extends BlockEntity> extends Craft
-     private final T blockEntity;
-     private final T snapshot;
-     public boolean snapshotDisabled; // Paper
--    public static boolean DISABLE_SNAPSHOT = false; // Paper
-+    public static final ThreadLocal<Boolean> DISABLE_SNAPSHOT = ThreadLocal.withInitial(() -> Boolean.FALSE); // Paper // Folia - region threading
- 
-     public CraftBlockEntityState(World world, T blockEntity) {
-         super(world, blockEntity.getBlockPos(), blockEntity.getBlockState());
-@@ -42,8 +42,8 @@ public abstract class CraftBlockEntityState<T extends BlockEntity> extends Craft
- 
-         try { // Paper - Show blockstate location if we failed to read it
-         // Paper start
--        this.snapshotDisabled = DISABLE_SNAPSHOT;
--        if (DISABLE_SNAPSHOT) {
-+        this.snapshotDisabled = DISABLE_SNAPSHOT.get().booleanValue(); // Folia - region threading
-+        if (snapshotDisabled) { // Folia - region threading
-             this.snapshot = this.blockEntity;
-         } else {
-             this.snapshot = this.createSnapshot(blockEntity);
 diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlockState.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlockState.java
 index ec3343ecbe68b1c2a33f85edb3b527363affa9ba..c943b1049a86e777b542310b6466ae253563792e 100644
 --- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlockState.java
@@ -1516,28 +1492,6 @@ index ec3343ecbe68b1c2a33f85edb3b527363affa9ba..c943b1049a86e777b542310b6466ae25
 +        ca.spottedleaf.moonrise.common.util.TickThread.ensureTickThread(this.world.getHandle(), this.position, "Cannot modify world asynchronously"); // Folia - region threading
          this.requirePlaced();
          net.minecraft.world.item.ItemStack item = org.bukkit.craftbukkit.inventory.CraftItemStack.asNMSCopy(tool);
- 
-diff --git a/src/main/java/org/bukkit/craftbukkit/block/CraftBlockStates.java b/src/main/java/org/bukkit/craftbukkit/block/CraftBlockStates.java
-index 063a4ad33d1c12ec2cc1dff5239a7bf58b92fabb..117ddb2e43c76a5e7b66a5cac473db4a7cea938a 100644
---- a/src/main/java/org/bukkit/craftbukkit/block/CraftBlockStates.java
-+++ b/src/main/java/org/bukkit/craftbukkit/block/CraftBlockStates.java
-@@ -198,14 +198,14 @@ public final class CraftBlockStates {
-         BlockPos pos = craftBlock.getPosition();
-         net.minecraft.world.level.block.state.BlockState state = craftBlock.getBlockState();
-         BlockEntity blockEntity = craftBlock.getLevel().getBlockEntity(pos);
--        boolean prev = CraftBlockEntityState.DISABLE_SNAPSHOT;
--        CraftBlockEntityState.DISABLE_SNAPSHOT = !useSnapshot;
-+        boolean prev = CraftBlockEntityState.DISABLE_SNAPSHOT.get().booleanValue(); // Folia - region threading
-+        CraftBlockEntityState.DISABLE_SNAPSHOT.set(Boolean.valueOf(!useSnapshot)); // Folia - region threading
-         try {
-             CraftBlockState blockState = CraftBlockStates.getBlockState(world, pos, state, blockEntity);
-             blockState.setWorldHandle(craftBlock.getLevel()); // Inject the block's level accessor
-             return blockState;
-         } finally {
--            CraftBlockEntityState.DISABLE_SNAPSHOT = prev;
-+            CraftBlockEntityState.DISABLE_SNAPSHOT.set(Boolean.valueOf(prev)); // Folia - region threading
-         }
-     }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java b/src/main/java/org/bukkit/craftbukkit/command/ConsoleCommandCompleter.java
 index 13c7992e48264bcbf93f577a21d89dcc1126f625..b81545f8e8a2c1e3fd0db293481ca0b1759fff00 100644
