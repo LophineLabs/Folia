@@ -2147,7 +2147,7 @@ index 000c5ea5d39d5ab6e5592012ab1cc7ee547505dc..ab2ee478c53923be85f5a6d4971bed5b
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index 9111e5459967f518dbfe883838fe0613639ee4e9..a05239dd29b34ee03dc3006c7b26b6665a77887a 100644
+index 4dae7488de485dff72cde27ee8be0467d00dffdf..d4ac14014f21f772ff00232e6b066db9e42932d4 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 @@ -113,6 +113,11 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
@@ -2200,7 +2200,7 @@ index 9111e5459967f518dbfe883838fe0613639ee4e9..a05239dd29b34ee03dc3006c7b26b666
          if (entityTracker == null) return false;
  
          return entityTracker.seenBy.contains(((CraftPlayer) player).getHandle().connection);
-@@ -1107,7 +1118,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1122,7 +1133,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          }
  
          ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
@@ -2209,7 +2209,7 @@ index 9111e5459967f518dbfe883838fe0613639ee4e9..a05239dd29b34ee03dc3006c7b26b666
  
          if (entityTracker == null) {
              return;
-@@ -1124,7 +1135,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1139,7 +1150,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          }
  
          ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
@@ -2218,7 +2218,7 @@ index 9111e5459967f518dbfe883838fe0613639ee4e9..a05239dd29b34ee03dc3006c7b26b666
  
          if (entityTracker == null) {
              return;
-@@ -1160,26 +1171,43 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1175,26 +1186,43 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          location.checkFinite();
          Location locationClone = location.clone(); // clone so we don't need to worry about mutations after this call.
  
@@ -2280,7 +2280,7 @@ index 9111e5459967f518dbfe883838fe0613639ee4e9..a05239dd29b34ee03dc3006c7b26b666
      }
      // Paper end - more teleport API / async chunk API
  
-@@ -1252,8 +1280,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1267,8 +1295,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
  
      @Override
      public Set<org.bukkit.entity.Player> getTrackedPlayers() {
