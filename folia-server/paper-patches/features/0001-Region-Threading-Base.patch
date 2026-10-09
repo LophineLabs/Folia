@@ -793,10 +793,10 @@ index 2d41914a6a1f61b1c100b27bc0ea230332f8f243..0ef9ddb8e409d4fbef270b3ea375c236
                  MinecraftServer.LOGGER.warn("Asynchronous " + reason + "!", new IllegalStateException());
              }
 diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea9aa4e136 100644
+index 5f33ba98facf68a185263d4e6cff96207426aa79..ea1326be43abc85a9e5c30f7bbf6f732527e741a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
 +++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
-@@ -309,7 +309,7 @@ public final class CraftServer implements Server {
+@@ -287,7 +287,7 @@ public final class CraftServer implements Server {
      private final ServerConfiguration serverConfig = new PaperServerConfiguration();
  
      // Paper start - Folia region threading API
@@ -805,7 +805,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
      private final io.papermc.paper.threadedregions.scheduler.FoliaAsyncScheduler asyncScheduler = new io.papermc.paper.threadedregions.scheduler.FoliaAsyncScheduler();
      private final io.papermc.paper.threadedregions.scheduler.FoliaGlobalRegionScheduler globalRegionScheduler = new io.papermc.paper.threadedregions.scheduler.FoliaGlobalRegionScheduler();
  
-@@ -386,7 +386,7 @@ public final class CraftServer implements Server {
+@@ -364,7 +364,7 @@ public final class CraftServer implements Server {
  
      @Override
      public final boolean isGlobalTickThread() {
@@ -814,7 +814,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
      }
      // Paper end - Folia reagion threading API
  
-@@ -915,11 +915,44 @@ public final class CraftServer implements Server {
+@@ -893,11 +893,44 @@ public final class CraftServer implements Server {
          return this.playerList;
      }
  
@@ -859,7 +859,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
          CommandSourceStack sourceStack = VanillaCommandWrapper.getListener(rawSender);
  
          String command = StringUtils.normalizeSpace(commandLine.trim());
-@@ -1167,6 +1200,7 @@ public final class CraftServer implements Server {
+@@ -1145,6 +1178,7 @@ public final class CraftServer implements Server {
  
      @Override
      public World createWorld(WorldCreator creator) {
@@ -867,7 +867,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
          Preconditions.checkState(this.console.getAllLevels().iterator().hasNext(), "Cannot create additional worlds on STARTUP");
          //Preconditions.checkState(!this.console.isIteratingOverLevels, "Cannot create a world while worlds are being ticked"); // Paper - Cat - Temp disable. We'll see how this goes.
          Preconditions.checkArgument(creator != null, "WorldCreator cannot be null");
-@@ -1324,6 +1358,7 @@ public final class CraftServer implements Server {
+@@ -1302,6 +1336,7 @@ public final class CraftServer implements Server {
  
      @Override
      public boolean unloadWorld(World world, boolean save) {
@@ -875,7 +875,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
          //Preconditions.checkState(!this.console.isIteratingOverLevels, "Cannot unload a world while worlds are being ticked"); // Paper - Cat - Temp disable. We'll see how this goes.
          if (world == null) {
              return false;
-@@ -2691,8 +2726,23 @@ public final class CraftServer implements Server {
+@@ -2689,8 +2724,23 @@ public final class CraftServer implements Server {
  
      @Override
      public double getAverageTickTime() {
@@ -901,7 +901,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
      }
  
      private final org.bukkit.Server.Spigot spigot = new org.bukkit.Server.Spigot() {
-@@ -2749,7 +2799,27 @@ public final class CraftServer implements Server {
+@@ -2747,7 +2797,27 @@ public final class CraftServer implements Server {
  
      @Override
      public double[] getTPS() {
@@ -930,7 +930,7 @@ index 478f4461ab3fb21b288aa2f6079860f23832e622..369545fcb7427b058953a268fd9302ea
      }
  
      @Override
-@@ -2919,7 +2989,7 @@ public final class CraftServer implements Server {
+@@ -2917,7 +2987,7 @@ public final class CraftServer implements Server {
  
      @Override
      public int getCurrentTick() {
@@ -1528,7 +1528,7 @@ index 72863de5d5a135cea571b59f20bb3690087b0bda..31274c636c43afecfe7a8dd9e69985b3
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java
-index ec01386c11738c4ee4678265517bc6e4077ebb27..6c109d2b48cba1318a506378b8ca04992ef1ead3 100644
+index 07d69dca2c29d7d9993d1cd9027ecea3a5b964f6..0c5a63af9260a7fee7e916333a2783ed36429207 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftAbstractArrow.java
 @@ -24,6 +24,7 @@ public abstract class CraftAbstractArrow extends AbstractProjectile implements A
@@ -2147,7 +2147,7 @@ index 000c5ea5d39d5ab6e5592012ab1cc7ee547505dc..ab2ee478c53923be85f5a6d4971bed5b
      }
  
 diff --git a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
-index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6722dc82d 100644
+index 9111e5459967f518dbfe883838fe0613639ee4e9..a05239dd29b34ee03dc3006c7b26b6665a77887a 100644
 --- a/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 +++ b/src/main/java/org/bukkit/craftbukkit/entity/CraftEntity.java
 @@ -113,6 +113,11 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
@@ -2182,7 +2182,7 @@ index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6
          Entity entity = this.getHandle();
          if (!entity.isAlive() || !entity.valid) {
              return false;
-@@ -769,7 +780,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -775,7 +786,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          ImmutableSet.Builder<Player> players = ImmutableSet.builder();
  
          ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
@@ -2191,7 +2191,7 @@ index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6
  
          if (entityTracker != null) {
              for (ServerPlayerConnection connection : entityTracker.seenBy) {
-@@ -786,7 +797,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -792,7 +803,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          Preconditions.checkArgument(player != null, "Player cannot be null");
  
          ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
@@ -2200,7 +2200,7 @@ index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6
          if (entityTracker == null) return false;
  
          return entityTracker.seenBy.contains(((CraftPlayer) player).getHandle().connection);
-@@ -1101,7 +1112,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1107,7 +1118,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          }
  
          ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
@@ -2209,7 +2209,7 @@ index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6
  
          if (entityTracker == null) {
              return;
-@@ -1118,7 +1129,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1124,7 +1135,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          }
  
          ServerLevel world = ((CraftWorld) this.getWorld()).getHandle();
@@ -2218,7 +2218,7 @@ index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6
  
          if (entityTracker == null) {
              return;
-@@ -1154,26 +1165,43 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1160,26 +1171,43 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
          location.checkFinite();
          Location locationClone = location.clone(); // clone so we don't need to worry about mutations after this call.
  
@@ -2280,7 +2280,7 @@ index 078083c88f336afd8bfe69c770c6d3ac486e826f..ad1b230961a9187df749bc3e82a1feb6
      }
      // Paper end - more teleport API / async chunk API
  
-@@ -1246,8 +1274,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
+@@ -1252,8 +1280,7 @@ public abstract class CraftEntity implements org.bukkit.entity.Entity {
  
      @Override
      public Set<org.bukkit.entity.Player> getTrackedPlayers() {

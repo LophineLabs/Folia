@@ -321,7 +321,7 @@ index 78659864651362de4fc104cbeb3e2e9a31b101d9..4e13aee3cd89204e1e8eb2b4bd276fec
          final List<SectionToUnload> ret = new ArrayList<>();
  
 diff --git a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
-index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c8875f64263 100644
+index ef990079fe5214a2817f55249163548f601523de..994a86cdeb2fd621bd42e7960da186523cd3206b 100644
 --- a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
 +++ b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
 @@ -62,6 +62,14 @@ import java.util.concurrent.atomic.AtomicReference;
@@ -577,7 +577,7 @@ index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c88
              MoonriseRegionFileIO.flush(this.world);
              try {
                  MoonriseRegionFileIO.flushRegionStorages(this.world);
-@@ -810,7 +917,13 @@ public final class ChunkHolderManager {
+@@ -825,7 +932,13 @@ public final class ChunkHolderManager {
      }
  
      public void tick() {
@@ -592,7 +592,7 @@ index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c88
  
          final int sectionShift = ((ChunkSystemServerLevel)this.world).moonrise$getRegionChunkShift();
  
-@@ -819,7 +932,7 @@ public final class ChunkHolderManager {
+@@ -834,7 +947,7 @@ public final class ChunkHolderManager {
  
          Ticket[] removedList = new Ticket[4];
  
@@ -601,7 +601,7 @@ index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c88
              final long sectionKey = iterator.nextLong();
  
              if (!this.sectionToChunkToExpireCount.containsKey(sectionKey)) {
-@@ -1153,21 +1266,55 @@ public final class ChunkHolderManager {
+@@ -1168,21 +1281,55 @@ public final class ChunkHolderManager {
          if (changedFullStatus.isEmpty()) {
              return;
          }
@@ -666,7 +666,7 @@ index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c88
          ((ChunkSystemServerChunkCache)this.world.getChunkSource()).moonrise$chunkHolderUnload(holder);
          PlatformHooks.get().onChunkHolderDelete(this.world, holder.vanillaChunkHolder);
          this.chunkHolders.remove(CoordinateUtils.getChunkKey(holder.chunkX, holder.chunkZ));
-@@ -1181,7 +1328,7 @@ public final class ChunkHolderManager {
+@@ -1196,7 +1343,7 @@ public final class ChunkHolderManager {
              throw new IllegalStateException("Cannot unload chunks recursively");
          }
          final int sectionShift = this.unloadQueue.coordinateShift; // sectionShift <= lock shift
@@ -675,7 +675,7 @@ index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c88
          int unloadCountTentative = 0;
          for (final ChunkUnloadQueue.SectionToUnload sectionRef : unloadSectionsForRegion) {
              final ChunkUnloadQueue.UnloadSection section
-@@ -1486,22 +1633,17 @@ public final class ChunkHolderManager {
+@@ -1526,22 +1673,17 @@ public final class ChunkHolderManager {
          return CURRENT_TICKET_UPDATE_SCHEDULING.get();
      }
  
@@ -706,7 +706,7 @@ index eb7c5ba7168ba4903e93938dd8671227194bec99..08d73b6d04d8e1decb79227dfa231c88
  
          boolean ret = false;
  
-@@ -1517,9 +1659,7 @@ public final class ChunkHolderManager {
+@@ -1557,9 +1699,7 @@ public final class ChunkHolderManager {
              ret |= holder.handleFullStatusChange(changedFullStatus);
  
              if (!changedFullStatus.isEmpty()) {
@@ -852,7 +852,7 @@ index 7a0006f9b56d1e43b06f9f7452e1b5bb0ec53e72..c078a3f9dfa7cc053ef7ca26a238debe
                  try {
                      consumer.accept(chunk);
 diff --git a/ca/spottedleaf/moonrise/patches/collisions/CollisionUtil.java b/ca/spottedleaf/moonrise/patches/collisions/CollisionUtil.java
-index 54b2492c3ab6bf9ff52cec53dc4635f725f9eb4f..bc91b87da9c8034fc142007bfb0be4927bd958d6 100644
+index 11d4f2d5caba52b492b8e130faa4701f3980b0f1..ca5065d057d039aaaa2334534edae351749cc7a0 100644
 --- a/ca/spottedleaf/moonrise/patches/collisions/CollisionUtil.java
 +++ b/ca/spottedleaf/moonrise/patches/collisions/CollisionUtil.java
 @@ -1940,6 +1940,17 @@ public final class CollisionUtil {
@@ -7328,7 +7328,7 @@ index 7cbcc8865893ea4f7fae8da13f534c65fcdcd216..fa52d458d402ae9121eaa8b876d8d6b4
      }
  
 diff --git a/net/minecraft/commands/Commands.java b/net/minecraft/commands/Commands.java
-index b50e884e874dc65ccd0900cd18e8435f512ba633..4a266562b3caf4bede1a2c5d25e5f88d2f7e0573 100644
+index d9acbf61ecd3d2800402880dd5d4d92239b01223..61972b775bbdf86fdc00f17699c50aeadeab7025 100644
 --- a/net/minecraft/commands/Commands.java
 +++ b/net/minecraft/commands/Commands.java
 @@ -200,16 +200,16 @@ public class Commands {
@@ -13347,7 +13347,7 @@ index fed2a68bf1a9e9a169c0235e129346b9b624170b..7e612e03087d63f9b500f7e9f3442b19
      private static TicketType register(final String name, final long timeout, final @TicketType.Flags int flags) {
          return Registry.register(BuiltInRegistries.TICKET_TYPE, name, new TicketType(timeout, flags));
 diff --git a/net/minecraft/server/level/WorldGenRegion.java b/net/minecraft/server/level/WorldGenRegion.java
-index 6f95e6d12183eee59272927bb21def3729d8789c..d1c9ddc72c5caca3fbd87a815dd287266cbc6e21 100644
+index 6f3b53b40df0263656dc195c82265de8374155d2..bd7235a50e0a3a92788c5ae17b303853ad613cf0 100644
 --- a/net/minecraft/server/level/WorldGenRegion.java
 +++ b/net/minecraft/server/level/WorldGenRegion.java
 @@ -115,6 +115,13 @@ public class WorldGenRegion implements WorldGenLevel {
@@ -19648,10 +19648,10 @@ index a211de15d9a41291f384fc457bcf38146bbd4e42..f1af23f700c731cea1951a7a219757d1
      }
  
 diff --git a/net/minecraft/world/level/chunk/ChunkGenerator.java b/net/minecraft/world/level/chunk/ChunkGenerator.java
-index bb484105c8bcbc277cd85b7d1168680bf0b1ce85..01eb4b7ac6ff1964c7a9a41c8fd4d33d7d0b9a26 100644
+index cc4800823c20e8ecbf0b4d74fd85a22bcb70c74c..a27c82876e6e343f1ffc795520f50dcc2d381a94 100644
 --- a/net/minecraft/world/level/chunk/ChunkGenerator.java
 +++ b/net/minecraft/world/level/chunk/ChunkGenerator.java
-@@ -363,7 +363,7 @@ public abstract class ChunkGenerator {
+@@ -372,7 +372,7 @@ public abstract class ChunkGenerator {
      }
  
      private static boolean tryAddReference(final StructureManager manager, final StructureStart start) {
@@ -19661,7 +19661,7 @@ index bb484105c8bcbc277cd85b7d1168680bf0b1ce85..01eb4b7ac6ff1964c7a9a41c8fd4d33d
              return true;
          } else {
 diff --git a/net/minecraft/world/level/chunk/LevelChunk.java b/net/minecraft/world/level/chunk/LevelChunk.java
-index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba632ba1f727 100644
+index 76dae652c910e36c860791a8285bd9fee466d5b9..8ffb2ed8a02c306a8510c4ce390b371b3221184a 100644
 --- a/net/minecraft/world/level/chunk/LevelChunk.java
 +++ b/net/minecraft/world/level/chunk/LevelChunk.java
 @@ -69,6 +69,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
@@ -19678,7 +19678,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
          @Override
          public boolean isRemoved() {
              return true;
-@@ -238,11 +245,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -243,11 +250,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
  
      @Override
      public void markUnsaved() {
@@ -19691,7 +19691,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
      }
  
      @Override
-@@ -364,6 +367,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -369,6 +372,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
  
      @Override
      public @Nullable BlockState setBlockState(final BlockPos pos, final BlockState state, final @Block.UpdateFlags int flags) {
@@ -19699,7 +19699,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
          int y = pos.getY();
          LevelChunkSection section = this.getSection(this.getSectionIndex(y));
          boolean wasEmpty = section.hasOnlyAir();
-@@ -423,7 +427,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -428,7 +432,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
              return null;
          }
  
@@ -19708,7 +19708,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
              state.onPlace(this.level, pos, oldState, movedByPiston);
          }
  
-@@ -467,7 +471,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -472,7 +476,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
  
      public @Nullable BlockEntity getBlockEntity(final BlockPos pos, final LevelChunk.EntityCreationType creationType) {
          // CraftBukkit start
@@ -19717,7 +19717,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
          if (blockEntity == null) {
              blockEntity = this.blockEntities.get(pos);
          }
-@@ -654,13 +658,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -659,13 +663,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
  
                  org.bukkit.World world = this.level.getWorld();
                  if (world != null) {
@@ -19733,7 +19733,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
                      }
                  }
                  server.getPluginManager().callEvent(new org.bukkit.event.world.ChunkPopulateEvent(bukkitChunk));
-@@ -686,7 +690,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -691,7 +695,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
      @Override
      public boolean isUnsaved() {
          // Paper start - rewrite chunk system
@@ -19742,7 +19742,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
          if (((ca.spottedleaf.moonrise.patches.chunk_system.ticks.ChunkSystemLevelChunkTicks)this.blockTicks).moonrise$isDirty(gameTime)
              || ((ca.spottedleaf.moonrise.patches.chunk_system.ticks.ChunkSystemLevelChunkTicks)this.fluidTicks).moonrise$isDirty(gameTime)) {
              return true;
-@@ -935,6 +939,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -940,6 +944,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
              this.ticker = ticker;
          }
  
@@ -19756,7 +19756,7 @@ index af4106497a69f9b311970197016c6157475a7d85..5940bc40b9c9d0ad92c7ecad01c1ba63
          @Override
          public void tick() {
              if (!this.blockEntity.isRemoved() && this.blockEntity.hasLevel()) {
-@@ -1019,6 +1030,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -1024,6 +1035,13 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
              this.ticker = ticker;
          }
  

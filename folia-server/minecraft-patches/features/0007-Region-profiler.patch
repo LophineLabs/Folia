@@ -417,10 +417,10 @@ index 0000000000000000000000000000000000000000..48223704c769b1920e5b7ad444f0ffea
 +    ) {}
 +}
 diff --git a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
-index 08d73b6d04d8e1decb79227dfa231c8875f64263..b944f8a465af5417d64b749096c74fbbcc000ca3 100644
+index 994a86cdeb2fd621bd42e7960da186523cd3206b..a990fc5957ca98ddee1b12413eae126dea5ae194 100644
 --- a/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
 +++ b/ca/spottedleaf/moonrise/patches/chunk_system/scheduling/ChunkHolderManager.java
-@@ -1588,6 +1588,7 @@ public final class ChunkHolderManager {
+@@ -1628,6 +1628,7 @@ public final class ChunkHolderManager {
      }
  
      public boolean processTicketUpdates() {
@@ -428,7 +428,7 @@ index 08d73b6d04d8e1decb79227dfa231c8875f64263..b944f8a465af5417d64b749096c74fbb
          if (BLOCK_TICKET_UPDATES.get() == Boolean.TRUE) {
              throw new IllegalStateException("Cannot update ticket level while unloading chunks or updating entity manager");
          }
-@@ -1625,6 +1626,7 @@ public final class ChunkHolderManager {
+@@ -1665,6 +1666,7 @@ public final class ChunkHolderManager {
          }
  
          return ret;
@@ -1408,10 +1408,10 @@ index b7a9d07e49511773ba6d9ceb6603be3596e9ba53..b098801c88e824e9afe204638ccfe3e1
  
      private static <T extends BlockEntity> BlockEntityType<T> register(
 diff --git a/net/minecraft/world/level/chunk/LevelChunk.java b/net/minecraft/world/level/chunk/LevelChunk.java
-index 5940bc40b9c9d0ad92c7ecad01c1ba632ba1f727..6d3b441de2417e7f2d8b32af285057eea7f1ff79 100644
+index 8ffb2ed8a02c306a8510c4ce390b371b3221184a..b5508c0488ba395ad9eb03baeee01922e2ec3364 100644
 --- a/net/minecraft/world/level/chunk/LevelChunk.java
 +++ b/net/minecraft/world/level/chunk/LevelChunk.java
-@@ -951,9 +951,12 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -956,9 +956,12 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
              if (!this.blockEntity.isRemoved() && this.blockEntity.hasLevel()) {
                  BlockPos pos = this.blockEntity.getBlockPos();
                  if (LevelChunk.this.isTicking(pos)) {
@@ -1424,7 +1424,7 @@ index 5940bc40b9c9d0ad92c7ecad01c1ba632ba1f727..6d3b441de2417e7f2d8b32af285057ee
                          BlockState blockState = LevelChunk.this.getBlockState(pos);
                          if (this.blockEntity.getType().isValid(blockState)) {
                              this.ticker.tick(LevelChunk.this.level, this.blockEntity.getBlockPos(), blockState, this.blockEntity);
-@@ -973,6 +976,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
+@@ -978,6 +981,7 @@ public class LevelChunk extends ChunkAccess implements DebugValueSource, ca.spot
                                  );
                              } // Paper - Remove the Block Entity if it's invalid
                          }
