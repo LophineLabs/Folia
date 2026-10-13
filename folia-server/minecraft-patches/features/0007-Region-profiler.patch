@@ -1131,7 +1131,7 @@ index 831b20bf84e6a4c08415867fe1e68155e45e1d01..d700b1f38bb7d8e35f4b14cba0583cda
  
          profiler.pop();
 diff --git a/net/minecraft/server/level/ServerLevel.java b/net/minecraft/server/level/ServerLevel.java
-index c2592c8879402e2788dd0e4e468b46e24ff2cd67..6f0d42eb5da9811e317e4b27c5fa800a7a03b639 100644
+index b6a303543b7b16f0795b92c0c9002ed25e2324c3..8de586793aad692d80946f3c4d05399952333807 100644
 --- a/net/minecraft/server/level/ServerLevel.java
 +++ b/net/minecraft/server/level/ServerLevel.java
 @@ -820,6 +820,7 @@ public class ServerLevel extends Level implements WorldGenLevel, ServerEntityGet
@@ -1265,10 +1265,10 @@ index c2592c8879402e2788dd0e4e468b46e24ff2cd67..6f0d42eb5da9811e317e4b27c5fa800a
      }
  
 diff --git a/net/minecraft/server/players/PlayerList.java b/net/minecraft/server/players/PlayerList.java
-index c70a3020bc616735cccc526f9c5997006248188e..ffeb0e566083c083c14e875df32346b554a373f3 100644
+index 734e6689ef1f377991117513e7da586d4d7f080e..82fb4aecffaf4ae97a9c2ab60eca2d67107de0a8 100644
 --- a/net/minecraft/server/players/PlayerList.java
 +++ b/net/minecraft/server/players/PlayerList.java
-@@ -1037,6 +1037,7 @@ public abstract class PlayerList {
+@@ -1038,6 +1038,7 @@ public abstract class PlayerList {
      public void saveAll(final int interval) {
          // Paper end - Incremental chunk and player saving
          //io.papermc.paper.util.MCUtil.ensureMain("Save Players" , () -> { // Paper - Ensure main // Folia - region threading
@@ -1276,7 +1276,7 @@ index c70a3020bc616735cccc526f9c5997006248188e..ffeb0e566083c083c14e875df32346b5
          // Paper start - Incremental chunk and player saving
              int numSaved = 0;
              final long now = System.nanoTime(); // Folia - region threading
-@@ -1048,7 +1049,9 @@ public abstract class PlayerList {
+@@ -1049,7 +1050,9 @@ public abstract class PlayerList {
              }
              // Folia end - region threading
              if (interval == -1 || now - player.lastSave >= timeInterval) { // Folia - region threading
