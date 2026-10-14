@@ -13483,10 +13483,10 @@ index 6baa9d2a8af7901d47964e6d7ad53ea7963ceeef..77c4670868a95dc7b13461dfa67af34b
              LOGGER.error("Couldn't place player in world", e);
              this.disconnect(DISCONNECT_REASON_INVALID_DATA);
 diff --git a/net/minecraft/server/network/ServerConnectionListener.java b/net/minecraft/server/network/ServerConnectionListener.java
-index 2f3b58491ef7be8cd2e081f2c44869cd1e50e6a6..37d5f9a73277de083a25a80e7808e049a4a4aae8 100644
+index 42408dede2808447281b49f4006c1d8b03c10bf4..edb259f4f033a64023a4e13d1c420c5f47bb4ee9 100644
 --- a/net/minecraft/server/network/ServerConnectionListener.java
 +++ b/net/minecraft/server/network/ServerConnectionListener.java
-@@ -128,12 +128,15 @@ public class ServerConnectionListener {
+@@ -129,12 +129,15 @@ public class ServerConnectionListener {
                                          });
                                      }
                                      // Paper end - Add support for proxy protocol
@@ -13504,7 +13504,7 @@ index 2f3b58491ef7be8cd2e081f2c44869cd1e50e6a6..37d5f9a73277de083a25a80e7808e049
                                  }
                              }
                          )
-@@ -246,7 +249,7 @@ public class ServerConnectionListener {
+@@ -247,7 +250,7 @@ public class ServerConnectionListener {
              this.addPendingConnections();
              // Spigot start
              // This prevents players from 'gaming' the server, and strategically relogging to increase their position in the tick order
